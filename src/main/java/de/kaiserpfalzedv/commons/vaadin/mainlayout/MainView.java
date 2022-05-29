@@ -21,20 +21,15 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.renderer.ClickableRenderer;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.HasDynamicTitle;
-import com.vaadin.flow.router.Route;
-import com.vaadin.quarkus.annotation.UIScoped;
+import com.vaadin.flow.router.*;
+import de.kaiserpfalzedv.commons.core.api.About;
+import de.kaiserpfalzedv.commons.security.PersonList;
+import de.kaiserpfalzedv.commons.vaadin.about.AboutView;
 import io.quarkus.oidc.IdToken;
-import io.quarkus.oidc.OidcSession;
-import io.quarkus.oidc.RefreshToken;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -44,7 +39,6 @@ import javax.inject.Inject;
 /**
  * The main view contains a button and a click listener.
  */
-@Route("")
 @Slf4j
 public class MainView extends AppLayout implements HasDynamicTitle, BeforeEnterObserver {
 
@@ -54,7 +48,6 @@ public class MainView extends AppLayout implements HasDynamicTitle, BeforeEnterO
     String appVersion;
 
     HorizontalLayout header;
-    VerticalLayout drawer;
 
     @Inject
     @IdToken
@@ -65,10 +58,9 @@ public class MainView extends AppLayout implements HasDynamicTitle, BeforeEnterO
     }
 
     private void createHeader() {
-        log.debug("Creating header. appName='{}', version={}, subject='{}', name='{}'",
-                appName, appVersion, idToken.getSubject(), idToken.getName());
+        remove(header);
 
-        H1 logo = new H1(appName + " | v" + appVersion);
+        Label logo = new Label(getPageTitle());
 
         Label user;
         if (idToken != null) {
@@ -96,13 +88,17 @@ public class MainView extends AppLayout implements HasDynamicTitle, BeforeEnterO
 
     private void createDrawer() {
         log.debug("Creating drawer. session='{}'", UI.getCurrent().getSession().getSession().getId());
-        drawer = new VerticalLayout();
+
+        RouterLink list = new RouterLink("Personen", PersonList.class);
+        RouterLink about = new RouterLink("About", AboutView.class);
 
         Button logout = new Button("Logout", e -> UI.getCurrent().getPage().setLocation("/logout"));
 
-        drawer.add(logout);
-
-        addToDrawer(drawer);
+        addToDrawer(
+                list,
+                about,
+                logout
+        );
     }
 
     @Override
@@ -113,7 +109,7 @@ public class MainView extends AppLayout implements HasDynamicTitle, BeforeEnterO
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        log.trace("Entering view. view='{}'", this.getClassName());
+        log.trace("Entering view. view='{}'", getClass().getSimpleName());
 
         createHeader();
     }

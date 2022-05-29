@@ -15,11 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.login;
+package de.kaiserpfalzedv.commons.security;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.*;
-import io.quarkus.oidc.IdTokenCredential;
 import io.quarkus.oidc.SecurityEvent;
 import io.quarkus.oidc.UserInfo;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -30,12 +29,9 @@ import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
-import java.security.Principal;
-import java.util.Set;
 
 /**
  * AuthenticationService --
@@ -51,11 +47,10 @@ public class AuthenticationService implements SecurityIdentityAugmentor, Session
         if (DefaultJWTCallerPrincipal.class.isAssignableFrom(identity.getPrincipal().getClass())) {
             DefaultJWTCallerPrincipal principal = ((DefaultJWTCallerPrincipal) identity.getPrincipal());
 
-            log.info("Augmenting identity. subject='{}', name='{}', issuer='{}'", principal.getSubject(), principal.getName(), principal.getIssuer());
-
-            if (log.isDebugEnabled() && !principal.getGroups().isEmpty()) {
-                log.debug("Groups for identity. subject={}, groups={}", principal.getSubject(), principal.getGroups());
-            }
+            log.info("Augmenting identity. subject='{}', name='{}', issuer='{}'",
+                    principal.getSubject(), principal.getName(), principal.getIssuer());
+        } else {
+            log.warn("Nobody is logged in.");
         }
 
         RoutingContext ctx = identity.getAttribute(RoutingContext.class.getName());
@@ -82,17 +77,23 @@ public class AuthenticationService implements SecurityIdentityAugmentor, Session
     @Override
     public void sessionDestroy(SessionDestroyEvent sessionDestroyEvent) {
         log.info("Destroying session. session={}", sessionDestroyEvent.getSession().getSession().getId());
-        UI.getCurrent().navigate("logout");
+        UI.getCurrent().getPage().setLocation("/logout");
     }
 
     public void event(@Observes SecurityEvent event) {
-        String tenantId = event.getSecurityIdentity().getAttribute("tenant-id");
-        DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) event.getSecurityIdentity().getPrincipal();
+        try {
+            DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) event.getSecurityIdentity().getPrincipal();
 
-        log.debug("Security event. tenant={}, issuer='{}', principal='{}', event={}",
-                tenantId, principal.getIssuer(),
-                principal.getName(),
-                event.getEventType().name());
+            log.debug("event={}, issuer='{}', principal='{}', tenant={}",
+                    event.getEventType().name(),
+                    principal.getIssuer(), principal.getName(),
+                    event.getSecurityIdentity().getAttribute("tenant-id"));
+        } catch (ClassCastException e) {
+            log.error("Unknown principal type. event={}, principal={}, type='{}'",
+                    event,
+                    event.getSecurityIdentity().getPrincipal(),
+                    event.getSecurityIdentity().getClass().getCanonicalName());
+        }
 
     }
 }

@@ -15,35 +15,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.about;
+package de.kaiserpfalzedv;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.HasDynamicTitle;
-import com.vaadin.flow.router.Route;
-import com.vaadin.quarkus.annotation.UIScoped;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainView;
+import com.vaadin.quarkus.QuarkusVaadinServlet;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.annotation.WebServlet;
 
 /**
- * AboutView --
+ * AppServlet --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-28
  */
 @Slf4j
-@Route(value = "about", layout = MainView.class)
-public class AboutView extends VerticalLayout implements HasDynamicTitle {
-
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
-
-    @Override
-    public String getPageTitle() {
-        return appName;
-    }
-
+@WebServlet(
+        urlPatterns = {"/ui/*", "/frontend/*"},
+        name = "Application",
+        asyncSupported = true
+)
+public class AppServlet extends QuarkusVaadinServlet {
 
 }

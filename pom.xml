@@ -39,6 +39,7 @@
 
         <quarkus.version>2.9.1.Final</quarkus.version>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+        <dependency-check-maven.version>7.1.0</dependency-check-maven.version>
     </properties>
 
     <repositories>
@@ -289,6 +290,19 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check-maven.version}</version>
+                <configuration>
+                    <!-- Fail only when detecting High Vulnerability issues -->
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <suppressionFiles>
+                        <suppressionFile>${project.basedir}/dependency-cpe-suppression.xml</suppressionFile>
+                    </suppressionFiles>
                 </configuration>
             </plugin>
         </plugins>

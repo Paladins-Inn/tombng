@@ -15,35 +15,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.about;
+package de.kaiserpfalzedv.commons.security;
 
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.quarkus.annotation.UIScoped;
 import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainView;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import javax.annotation.PostConstruct;
 
 /**
- * AboutView --
+ * PersonList --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-28
+ * @since 2.0.0  2022-05-29
  */
 @Slf4j
-@Route(value = "about", layout = MainView.class)
-public class AboutView extends VerticalLayout implements HasDynamicTitle {
-
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
-
-    @Override
-    public String getPageTitle() {
-        return appName;
+@Route(value = "", layout = MainView.class)
+public class PersonList extends VerticalLayout {
+    public PersonList() {
+        add(new Label("Personenliste"));
     }
-
-
 }

@@ -17,15 +17,14 @@
 
 package de.kaiserpfalzedv.commons.vaadin.about;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.router.Route;
-import com.vaadin.quarkus.annotation.UIScoped;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainView;
+import com.vaadin.flow.router.RoutePrefix;
+import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
+import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import javax.annotation.PostConstruct;
 
 /**
  * AboutView --
@@ -34,16 +33,15 @@ import javax.annotation.PostConstruct;
  * @since 2.0.0  2022-05-28
  */
 @Slf4j
-@Route(value = "about", layout = MainView.class)
-public class AboutView extends VerticalLayout implements HasDynamicTitle {
+@Route(value = "about", layout = MainLayout.class)
+@RoutePrefix("free")
+public class AboutView extends FormLayout implements TraceNavigation {
 
     @ConfigProperty(name = "application.name", defaultValue = "Application")
     String appName;
 
-    @Override
-    public String getPageTitle() {
-        return appName;
+    public AboutView() {
+        add(new Label("AboutView"));
     }
-
 
 }

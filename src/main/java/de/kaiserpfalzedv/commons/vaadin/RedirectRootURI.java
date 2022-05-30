@@ -15,35 +15,39 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.security;
+package de.kaiserpfalzedv.commons.vaadin;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
-import io.quarkus.oidc.IdToken;
-import lombok.Getter;
+import io.quarkus.vertx.web.RouteFilter;
+import io.vertx.ext.web.RoutingContext;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
 
 /**
- * PersonList --
+ * RedirectRootURI -- Redirecting requests to "/" to the configured UI.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-29
  */
 @Slf4j
-@Route(value = "Person", layout = MainLayout.class)
-@RoutePrefix("admin")
-@Getter
-public class PersonList extends VerticalLayout implements TraceNavigation {
+@ApplicationScoped
+public class RedirectRootURI {
+    @ConfigProperty(name = "application.http.ui-base", defaultValue = "/ui/")
+    String redirectURI;
 
-    @Inject
-    @IdToken
-    JsonWebToken idToken;
+    @RouteFilter(400)
+    void redirectRootToUi(RoutingContext rc) {
+        String uri = rc.request().uri();
 
+        if (uri.equals("/")) {
+            log.trace("Redirecting. uri='{}', destination='{}'", uri, redirectURI);
+            rc.reroute(redirectURI);
+            return;
+        } else {
+            log.trace("Don't redirect. uri='{}'", uri);
+        }
 
+        rc.next();
+    }
 }

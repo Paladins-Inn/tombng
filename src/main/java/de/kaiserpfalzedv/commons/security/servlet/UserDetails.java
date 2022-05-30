@@ -15,11 +15,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv;
+package de.kaiserpfalzedv.commons.security.servlet;
 
-import com.vaadin.flow.component.page.AppShellConfigurator;
-import com.vaadin.flow.theme.Theme;
+import de.kaiserpfalzedv.commons.core.resources.HasId;
+import de.kaiserpfalzedv.commons.core.resources.HasName;
 
-@Theme("starter-theme")
-public class AppConfig implements AppShellConfigurator {
+import java.io.Serializable;
+import java.security.Principal;
+
+/**
+ * UserDetails -- User information for the UI.
+ *
+ * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
+ * @since 2.0.0  2022-05-29
+ */
+public interface UserDetails extends Serializable, Principal, HasName, HasId {
+    Principal getPrincipal();
+
+    boolean isUserInRole(final String role);
 }

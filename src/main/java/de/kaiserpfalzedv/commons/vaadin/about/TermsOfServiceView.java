@@ -15,25 +15,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv;
+package de.kaiserpfalzedv.commons.vaadin.about;
 
-import com.vaadin.quarkus.QuarkusVaadinServlet;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RoutePrefix;
+import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
+import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.servlet.annotation.WebServlet;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * AppServlet --
+ * AboutView --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-28
  */
 @Slf4j
-@WebServlet(
-        urlPatterns = {"/ui/*", "/frontend/*"},
-        name = "Application",
-        asyncSupported = true
-)
-public class AppServlet extends QuarkusVaadinServlet {
+@Route(value = "tos", layout = MainLayout.class)
+@RoutePrefix("free")
+public class TermsOfServiceView extends FormLayout implements TraceNavigation {
+
+    @ConfigProperty(name = "application.name", defaultValue = "Application")
+    String appName;
+
+    public TermsOfServiceView() {
+        add(new Label("Terms of service"));
+    }
 
 }

@@ -17,8 +17,6 @@
 
 package de.kaiserpfalzedv.commons.security;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.server.*;
 import io.quarkus.oidc.SecurityEvent;
 import io.quarkus.oidc.UserInfo;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -32,25 +30,29 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
+import java.io.Serializable;
 
 /**
- * AuthenticationService --
+ * AuthenticationService -- Authentication service for usage with OIDC and a local pointer entry in JPA.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-27
  */
 @ApplicationScoped
 @Slf4j
-public class AuthenticationService implements SecurityIdentityAugmentor, SessionInitListener, SessionDestroyListener {
+public class AuthenticationService implements SecurityIdentityAugmentor, Serializable {
+
+    private DefaultJWTCallerPrincipal principal;
+
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
         if (DefaultJWTCallerPrincipal.class.isAssignableFrom(identity.getPrincipal().getClass())) {
-            DefaultJWTCallerPrincipal principal = ((DefaultJWTCallerPrincipal) identity.getPrincipal());
-
-            log.info("Augmenting identity. subject='{}', name='{}', issuer='{}'",
+            principal = ((DefaultJWTCallerPrincipal) identity.getPrincipal());
+            log.debug("Augmenting identity. subject='{}', name='{}', issuer='{}'",
                     principal.getSubject(), principal.getName(), principal.getIssuer());
         } else {
-            log.warn("Nobody is logged in.");
+            principal = null;
         }
 
         RoutingContext ctx = identity.getAttribute(RoutingContext.class.getName());
@@ -66,34 +68,30 @@ public class AuthenticationService implements SecurityIdentityAugmentor, Session
             identity = builder.build();
         }
 
+
         return Uni.createFrom().item(identity);
-    }
-
-    @Override
-    public void sessionInit(SessionInitEvent sessionInitEvent) throws ServiceException {
-        log.info("Initializing session. session={}", sessionInitEvent.getSession().getSession().getId());
-    }
-
-    @Override
-    public void sessionDestroy(SessionDestroyEvent sessionDestroyEvent) {
-        log.info("Destroying session. session={}", sessionDestroyEvent.getSession().getSession().getId());
-        UI.getCurrent().getPage().setLocation("/logout");
     }
 
     public void event(@Observes SecurityEvent event) {
         try {
-            DefaultJWTCallerPrincipal principal = (DefaultJWTCallerPrincipal) event.getSecurityIdentity().getPrincipal();
+            principal = (DefaultJWTCallerPrincipal) event.getSecurityIdentity().getPrincipal();
 
             log.debug("event={}, issuer='{}', principal='{}', tenant={}",
                     event.getEventType().name(),
                     principal.getIssuer(), principal.getName(),
                     event.getSecurityIdentity().getAttribute("tenant-id"));
         } catch (ClassCastException e) {
+            principal = null;
+
             log.error("Unknown principal type. event={}, principal={}, type='{}'",
                     event,
                     event.getSecurityIdentity().getPrincipal(),
                     event.getSecurityIdentity().getClass().getCanonicalName());
         }
+    }
 
+    @Produces
+    public DefaultJWTCallerPrincipal getPrincipal() {
+        return principal;
     }
 }

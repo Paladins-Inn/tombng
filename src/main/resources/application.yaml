@@ -2,6 +2,8 @@
 application:
   name: Theatre of Mind Bot
   version: 1.0-SNAPSHOT
+  http:
+    ui-base: /ui/
 
 
 quarkus:
@@ -10,21 +12,40 @@ quarkus:
     authentication:
       cookie-path: /
       user-info-required: true
-
     logout:
       path: /logout
-      post-logout-path: /ui
+      post-logout-path: /ui/
       backchannel:
         path: /back-channel-logout
-
     roles:
       source: userinfo
       role-claim-path: "realm_access/roles"
+  security:
+    users:
+      embedded:
+        enabled: true
+        plain-text: true
+        realm-name: Technical Users
+        users:
+          klenkes: klenkes
+          prometheus: Maica7biegheishe
+          check: eeneila7UGohz6Ia
+        roles:
+          klenkes: user,admin,api,operator
+          prometheus: metrics
+          check: checks
 
   datasource:
-    reactive:
-      mysql:
-        ssl-mode: preferred
+    jdbc:
+      ~: true
+      enable-metrics: true
+    health:
+      enabled: true
+    metrics:
+      enabled: true
+  liquibase:
+    migrate-at-start: true
+    validate-on-migrate: true
 
   http:
     proxy:
@@ -34,50 +55,63 @@ quarkus:
       forwarded-host-header: X-ORIGINAL-HOST
     cors:
       ~: true
-      origins: http.//localhost:8080
+      origins: http://localhost:8080
       methods: GET,PUT,POST,HEAD
     auth:
       permission:
         ui:
-          paths: /ui/*
+          paths: "/ui/*"
           policy: ui
+          methods: GET, POST, PUT, HEAD
+        free:
+          paths: "/ui/free/*"
+          policy: permit
+          methods: GET, POST, PUT, HEAD
         admin:
-          paths: /ui/admin/*
+          paths: "/ui/admin/*"
           policy: admin
+          methods: GET, POST, PUT, HEAD
         api:
           paths: /api/*
           policy: api
-        observability:
-          paths: /q/*
-          policy: observability
+        operator:
+          paths: /q
+          policy: operator
+          methods: GET, POST, PUT, HEAD
+          auth-mechanism: basic
+        checks:
+          paths: /q/health,/q/health/*
+          policy: checks
+          methods: GET
+          auth-mechanism: basic
+        metrics:
+          paths: /q/metrics
+          policy: metrics
+          methods: GET
+          auth-mechanism: basic
       policy:
         ui:
           roles-allowed: user
+        api:
+          roles-allowed: user,admin,api,operator
         admin:
           roles-allowed: admin
-        api:
-          roles-allowed: api
-        observability:
-          roles-allowed: metrics
+        operator:
+          roles-allowed: operator
+        checks:
+          roles-allowed: checks,operator
+        metrics:
+          roles-allowed: metrics,operator
     access-log:
       enabled: true
-      exclude-pattern: "/q/healthz/*"
+      exclude-pattern: "/q/health*"
     record-request-start-time: true
-    enable-compression: true
-    enable-decompression: true
+    enable-compression: false
+    enable-decompression: false
+
   health:
     openapi:
       included: true
-
-  smallrye-graphql:
-    metrics:
-      enabled: true
-    tracing:
-      enabled: true
-    validation:
-      enabled: true
-    events:
-      enabled: true
 
   log:
     console:

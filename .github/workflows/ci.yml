@@ -22,7 +22,7 @@ jobs:
 
       - name: Build
         id: build-java
-        run: mvn deploy -U -B -Pproduction,release -DskipTests=true
+        run: mvn deploy -U -B -Pproduction -DskipTests=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

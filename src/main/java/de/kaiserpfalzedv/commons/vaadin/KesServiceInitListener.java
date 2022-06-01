@@ -15,32 +15,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.about;
+package de.kaiserpfalzedv.commons.vaadin;
 
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * AboutView --
+ * KesServiceInitListener --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-28
+ * @since 2.0.0  2022-06-01
  */
 @Slf4j
-@Route(value = "policy")
-@RoutePrefix("free")
-public class PolicyView extends FormLayout implements TraceNavigation {
-
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
-
-    public PolicyView() {
-        add(new Label("Policy"));
+public class KesServiceInitListener implements VaadinServiceInitListener {
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        log.debug("Service initialized");
     }
-
 }

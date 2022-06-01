@@ -17,19 +17,35 @@
 
 package de.kaiserpfalzedv.commons.vaadin;
 
-import com.vaadin.flow.component.page.AppShellConfigurator;
-import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.i18n.I18NProvider;
+import com.vaadin.quarkus.annotation.VaadinServiceEnabled;
+import com.vaadin.quarkus.annotation.VaadinServiceScoped;
+import de.kaiserpfalzedv.commons.core.i18n.Translator;
 import io.quarkus.arc.Unremovable;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
+import java.util.Locale;
 
-@Theme("starter-theme")
-@ApplicationScoped
 @Unremovable
-@Slf4j
-public class AppConfig implements AppShellConfigurator {
-    public AppConfig() {
-        log.info("AppConfig created.");
+@VaadinServiceScoped
+@VaadinServiceEnabled
+public class KesI18nProvider implements I18NProvider {
+
+    private final Translator translator;
+
+    @Inject
+    public KesI18nProvider(Translator translator) {
+        this.translator = translator;
+    }
+
+    @Override
+    public List<Locale> getProvidedLocales() {
+        return translator.getProvidedLocales();
+    }
+
+    @Override
+    public String getTranslation(String s, Locale locale, Object... objects) {
+        return getTranslation(s, locale, objects);
     }
 }

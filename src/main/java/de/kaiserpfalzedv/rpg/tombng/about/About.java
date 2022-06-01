@@ -15,33 +15,34 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.rpg.tombng.dashboard;
+package de.kaiserpfalzedv.rpg.tombng.about;
 
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
 /**
- * AboutView --
+ * About --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-28
  */
+@Path("/api/about")
 @Slf4j
-@Route(value = "", layout = MainLayout.class)
-@RouteAlias("dashboard")
-public class DashboardView extends FormLayout implements TraceNavigation {
-
+public class About {
     @ConfigProperty(name = "application.name", defaultValue = "Application")
     String appName;
 
-    public DashboardView() {
-        add(new Label("Dashboard"));
-    }
+    @ConfigProperty(name = "application.version", defaultValue = "999")
+    String appVersion;
 
+    @Path("/")
+    @GET
+    @RolesAllowed({"api"})
+    public String about() {
+        return appName + " v." + appVersion;
+    }
 }

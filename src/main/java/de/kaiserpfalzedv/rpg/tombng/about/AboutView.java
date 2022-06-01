@@ -15,35 +15,39 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.security;
+package de.kaiserpfalzedv.rpg.tombng.about;
 
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
-import io.quarkus.oidc.IdToken;
-import lombok.Getter;
+import com.vaadin.flow.router.RouteAlias;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 /**
- * PersonList --
+ * AboutView --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-29
+ * @since 2.0.0  2022-06-01
  */
+@Route("")
+@RouteAlias("about")
+@Dependent
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
-@Route(value = "Person", layout = MainLayout.class)
-@RoutePrefix("admin")
-@Getter
-public class PersonList extends VerticalLayout implements TraceNavigation {
+public class AboutView extends VerticalLayout {
+    @ConfigProperty(name = "application.name")
+    String appName;
 
-    @Inject
-    @IdToken
-    JsonWebToken idToken;
-
-
+    @PostConstruct
+    @RolesAllowed({"user", "admin", "editor"})
+    public void init() {
+        add(new Label(appName));
+    }
 }

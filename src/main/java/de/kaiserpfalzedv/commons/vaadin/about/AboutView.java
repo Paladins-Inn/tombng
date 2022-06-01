@@ -20,7 +20,6 @@ package de.kaiserpfalzedv.commons.vaadin.about;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
 import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
 import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  */
 @Slf4j
 @Route(value = "about", layout = MainLayout.class)
-@RoutePrefix("free")
 public class AboutView extends FormLayout implements TraceNavigation {
 
     @ConfigProperty(name = "application.name", defaultValue = "Application")

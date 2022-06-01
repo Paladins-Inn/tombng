@@ -38,16 +38,27 @@ public class RedirectRootURI {
 
     @RouteFilter(400)
     void redirectRootToUi(RoutingContext rc) {
+/*
         String uri = rc.request().uri();
+        String session = (rc.session() != null)
+                ? String.format("%s/%s/%s",
+                        rc.session().id(),
+                        rc.session().oldId(),
+                        rc.session().regenerateId()
+                )
+                : "-";
 
-        if (uri.equals("/")) {
-            log.trace("Redirecting. uri='{}', destination='{}'", uri, redirectURI);
-            rc.reroute(redirectURI);
+        if (uri.equals("/") || uri.startsWith("/?")) {
+            log.trace(
+                    "Redirecting. uri='{}', session='{}' destination='{}'",
+                    uri,
+                    session,
+                    redirectURI
+            );
+            rc.redirect(redirectURI);
             return;
-        } else {
-            log.trace("Don't redirect. uri='{}'", uri);
         }
-
+*/
         rc.next();
     }
 }

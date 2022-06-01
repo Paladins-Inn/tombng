@@ -15,12 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.mainlayout;
+package de.kaiserpfalzedv.rpg.tombng.dashboard;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
+import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -32,6 +34,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  */
 @Slf4j
 @Route(value = "", layout = MainLayout.class)
+@RouteAlias("dashboard")
 public class DashboardView extends FormLayout implements TraceNavigation {
 
     @ConfigProperty(name = "application.name", defaultValue = "Application")

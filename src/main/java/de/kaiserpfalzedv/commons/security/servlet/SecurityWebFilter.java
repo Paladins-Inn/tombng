@@ -17,10 +17,8 @@
 
 package de.kaiserpfalzedv.commons.security.servlet;
 
-import io.quarkus.oidc.IdToken;
 import io.quarkus.oidc.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import javax.inject.Inject;
 import javax.servlet.*;
@@ -37,11 +35,6 @@ import java.io.IOException;
 @WebFilter(urlPatterns = {"/ui", "/ui/", "/ui/*"})
 @Slf4j
 public class SecurityWebFilter implements Filter {
-
-    @Inject
-    @IdToken
-    JsonWebToken idToken;
-
     @Inject
     UserInfo userInfo;
 
@@ -53,15 +46,9 @@ public class SecurityWebFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        log.trace("security web filter. issuer='{}', subject='{}', name='{}', userInfo={}",
-                idToken.getIssuer(), idToken.getSubject(), idToken.getName(), userInfo.getString("sub"));
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-        ((HttpServletRequest) servletRequest).getSession().setAttribute("idToken", idToken);
-        ((HttpServletRequest) servletRequest).getSession().setAttribute("userInfo", userInfo);
-        filterChain.doFilter(new SecurityHttpServletRequest((HttpServletRequest) servletRequest), servletResponse);
-
-        ((HttpServletRequest) servletRequest).getSession().setAttribute("idToken", null);
-        ((HttpServletRequest) servletRequest).getSession().setAttribute("userInfo", null);
+        filterChain.doFilter(new SecurityHttpServletRequest(request, userInfo), servletResponse);
     }
 
     @Override

@@ -15,5 +15,4 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-# Push support in Hilla
-com.vaadin.experimental.hillaPush=true
+de.kaiserpfalzedv.commons.vaadin.VaadinSessionFilter

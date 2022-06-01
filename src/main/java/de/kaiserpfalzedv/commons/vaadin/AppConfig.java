@@ -15,11 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.mainlayout;
+package de.kaiserpfalzedv.commons.vaadin;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.Theme;
+import io.quarkus.arc.Unremovable;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.enterprise.context.ApplicationScoped;
 
 @Theme("starter-theme")
+@ApplicationScoped
+@Unremovable
+@Slf4j
 public class AppConfig implements AppShellConfigurator {
+    public AppConfig() {
+        log.info("AppConfig created.");
+    }
 }

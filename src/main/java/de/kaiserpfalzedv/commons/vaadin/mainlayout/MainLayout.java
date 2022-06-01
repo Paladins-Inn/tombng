@@ -34,18 +34,18 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.quarkus.context.BeanProvider;
 import com.youthlin.avatar.Gravatar;
-import de.kaiserpfalzedv.commons.security.PersonList;
+import de.kaiserpfalzedv.commons.vaadin.LogoutView;
 import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
 import de.kaiserpfalzedv.commons.vaadin.about.AboutView;
-import de.kaiserpfalzedv.commons.vaadin.about.PolicyView;
-import de.kaiserpfalzedv.commons.vaadin.about.TermsOfServiceView;
-import io.quarkus.oidc.UserInfo;
+import de.kaiserpfalzedv.rpg.tombng.dashboard.DashboardView;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.slf4j.LoggerFactory;
 
 import java.security.Principal;
+import java.util.List;
 
 /**
  * The main view contains a button and a click listener.
@@ -53,10 +53,7 @@ import java.security.Principal;
 @Slf4j
 public class MainLayout extends AppLayout implements TraceNavigation {
 
-    private final Tabs menu;
-    private H1 viewTitle;
-
-    private Avatar avatar = new Avatar("anonymous");
+    private final Avatar avatar = new Avatar("anonymous");
 
 
     public MainLayout() {
@@ -65,8 +62,24 @@ public class MainLayout extends AppLayout implements TraceNavigation {
         setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeader());
 
-        menu = createMenu();
+        Tabs menu = loadMenu();
+
         addToDrawer(createDrawer(menu));
+    }
+
+    private Tabs loadMenu() {
+        Tabs result;
+
+        LayoutRouteProvider p = BeanProvider.getContextualReference(LayoutRouteProvider.class, true);
+        p.init();
+        List<ComponentEntry> componentEntries = p.scan(getClass());
+        if (componentEntries.isEmpty()) {
+            result = createMenu();
+        } else {
+            result = createMenu(componentEntries);
+        }
+
+        return result;
     }
 
 
@@ -80,7 +93,7 @@ public class MainLayout extends AppLayout implements TraceNavigation {
 
         layout.add(new DrawerToggle());
 
-        viewTitle = new H1();
+        H1 viewTitle = new H1();
         layout.add(viewTitle);
 
         layout.add(avatar);
@@ -119,14 +132,35 @@ public class MainLayout extends AppLayout implements TraceNavigation {
         return tabs;
     }
 
+    private Tabs createMenu(List<ComponentEntry> components) {
+        final Tabs tabs = new Tabs();
+        tabs.setOrientation(Tabs.Orientation.VERTICAL);
+        tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL);
+        tabs.setId("tabs");
+
+        tabs.add(
+                components.stream()
+                        .map(this::createTab)
+                        .toArray(Tab[]::new)
+        );
+
+        return tabs;
+    }
+
+    private Tab createTab(ComponentEntry entry) {
+        final Tab tab = new Tab();
+
+        tab.add(new RouterLink(entry.getKey(), entry.getValue().getClass()));
+        ComponentUtil.setData(tab, Class.class, entry.getValue().getClass());
+
+        return tab;
+    }
+
     private Component[] createMenuItems() {
         return new Tab[]{
                 createTab("Dash Board", DashboardView.class),
                 createTab("About", AboutView.class),
-                createTab("Personen", PersonList.class),
-                createTab("Terms of Service", TermsOfServiceView.class),
-                createTab("Data Protection Policy", PolicyView.class),
-                createTab("Logout", "/logout")
+                createTab("Logout", LogoutView.class)
         };
     }
 
@@ -152,13 +186,15 @@ public class MainLayout extends AppLayout implements TraceNavigation {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         UI ui = getUI().orElse(null);
-        LoggerFactory.getLogger(getClass()).trace("Navigation finished. session='{}', ui='{}', component='{}', principal={}, user={}",
-                ui.getSession().getSession().getId(),
-                ui.getId(),
-                this.getClass().getSimpleName(),
-                ((JsonWebToken) ui.getSession().getAttribute(Principal.class)).getSubject(),
-                ((UserInfo) ui.getSession().getSession().getAttribute("userInfo")).get("sub")
-        );
+
+        if (ui.getSession() != null) {
+            LoggerFactory.getLogger(getClass()).trace("Navigation finished. session='{}', ui='{}', component='{}', principal={}",
+                    ui.getSession().getSession().getId(),
+                    ui.getId(),
+                    this.getClass().getSimpleName(),
+                    ((JsonWebToken) ui.getSession().getAttribute(Principal.class)).getSubject()
+            );
+        }
 
         setUser(ui.getSession().getAttribute(Principal.class));
 
@@ -168,8 +204,10 @@ public class MainLayout extends AppLayout implements TraceNavigation {
         this.user = user;
 
         if (user != null) {
+            String email = user.getName() != null ? user.getName() : "jane@doe.me";
+
             avatar.setName(user.getName());
-            avatar.setImage(Gravatar.withEmail(user.getName()).size(80).getUrl());
+            avatar.setImage(Gravatar.withEmail(email).size(80).getUrl());
         } else {
             avatar.setName("anonymous");
         }

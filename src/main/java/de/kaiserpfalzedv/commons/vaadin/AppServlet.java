@@ -15,12 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.mainlayout;
+package de.kaiserpfalzedv.commons.vaadin;
 
 import com.vaadin.flow.server.*;
 import com.vaadin.quarkus.QuarkusVaadinServlet;
+import io.quarkus.arc.Unremovable;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
 /**
@@ -30,9 +33,11 @@ import javax.servlet.annotation.WebServlet;
  * @since 2.0.0  2022-05-28
  */
 @Slf4j
+@ApplicationScoped
+@Unremovable
 @WebServlet(
-        urlPatterns = {"/ui/*", "/frontend/*"},
-        name = "Application",
+        urlPatterns = {"/*", "/frontend/*"},
+        name = "Vaadin UI",
         asyncSupported = true
 )
 public class AppServlet extends QuarkusVaadinServlet implements SessionInitListener, SessionDestroyListener {
@@ -42,12 +47,26 @@ public class AppServlet extends QuarkusVaadinServlet implements SessionInitListe
     }
 
     @Override
+    public void servletInitialized() throws ServletException {
+        super.servletInitialized();
+
+        getService().addSessionInitListener(this);
+        getService().addSessionDestroyListener(this);
+    }
+
+
+    @Override
     public void sessionDestroy(SessionDestroyEvent event) {
-        log.trace("session destroy event. session='{}'", event.getSession().getSession().getId());
+        log.trace("session destroy event. session='{}', duration='{}'",
+                event.getSession().getSession().getId(),
+                event.getSession().getCumulativeRequestDuration());
     }
 
     @Override
     public void sessionInit(SessionInitEvent event) throws ServiceException {
-        log.trace("session init event. session='{}'", event.getSession().getSession().getId());
+        log.trace("session init event. session='{}', principal='{}'",
+                event.getSession().getSession().getId(),
+                event.getRequest().getUserPrincipal().getName()
+        );
     }
 }

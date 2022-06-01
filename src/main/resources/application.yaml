@@ -3,7 +3,7 @@ application:
   name: Theatre of Mind Bot
   version: 1.0-SNAPSHOT
   http:
-    ui-base: /ui/
+    ui-base: /dashboard
 
 
 quarkus:
@@ -13,13 +13,14 @@ quarkus:
       cookie-path: /
       user-info-required: true
     logout:
-      path: /logout
-      post-logout-path: /ui/
+      path: /oidc-logout
+      post-logout-path: /dashboard
       backchannel:
         path: /back-channel-logout
     roles:
-      source: userinfo
-      role-claim-path: "realm_access/roles"
+      role-claim-path: "groups"
+    token-state-manager:
+      split-tokens: true
   security:
     users:
       embedded:
@@ -56,39 +57,30 @@ quarkus:
     cors:
       ~: true
       origins: http://localhost:8080
-      methods: GET,PUT,POST,HEAD
+      methods: GET,PUT,POST,DELETE,HEAD
     auth:
       permission:
         ui:
-          paths: "/ui/*"
+          paths: "/,/*"
           policy: ui
-          methods: GET, POST, PUT, HEAD
         free:
-          paths: "/ui/free/*"
+          paths: "/free/*,/logout"
           policy: permit
-          methods: GET, POST, PUT, HEAD
         admin:
-          paths: "/ui/admin/*"
+          paths: "/admin/*"
           policy: admin
-          methods: GET, POST, PUT, HEAD
         api:
-          paths: /api/*
+          paths: "/api/*"
           policy: api
         operator:
-          paths: /q
+          paths: "/q/*"
           policy: operator
-          methods: GET, POST, PUT, HEAD
-          auth-mechanism: basic
         checks:
-          paths: /q/health,/q/health/*
+          paths: "/q/health,/q/health/*"
           policy: checks
-          methods: GET
-          auth-mechanism: basic
         metrics:
-          paths: /q/metrics
+          paths: "/q/metrics"
           policy: metrics
-          methods: GET
-          auth-mechanism: basic
       policy:
         ui:
           roles-allowed: user
@@ -104,10 +96,14 @@ quarkus:
           roles-allowed: metrics,operator
     access-log:
       enabled: true
-      exclude-pattern: "/q/health*"
+      exclude-pattern: "/q/health.*"
     record-request-start-time: true
-    enable-compression: false
-    enable-decompression: false
+    enable-compression: true
+    enable-decompression: true
+
+  resteasy:
+    metrics:
+      enabled: true
 
   health:
     openapi:
@@ -118,13 +114,15 @@ quarkus:
       json: true
       stderr: true
       async:
-        ~: true
+        ~: false
         queue-length: 256
         overflow: discard
     min-level: TRACE
     level: INFO
     category:
       "de.kaiserpfalzedv":
+        level: TRACE
+      "com.vaadin":
         level: TRACE
     metrics:
       enabled: true

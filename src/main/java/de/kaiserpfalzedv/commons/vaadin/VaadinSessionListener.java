@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 
 /**
  * VaadinSessionListener --
@@ -35,6 +36,9 @@ import javax.enterprise.inject.Produces;
 @VaadinServiceScoped
 @Slf4j
 public class VaadinSessionListener implements SessionInitListener, SessionDestroyListener {
+
+    @Inject
+    VaadinErrorHandler errorHandler;
 
     @Produces
     public VaadinSession session() {
@@ -57,5 +61,7 @@ public class VaadinSessionListener implements SessionInitListener, SessionDestro
         event.getService().getContext().getContextParameterNames().asIterator().forEachRemaining(
                 a -> log.trace("Context parameter. key='{}', value={}", a, event.getService().getContext().getContextParameter(a))
         );
+
+        event.getSession().setErrorHandler(errorHandler);
     }
 }

@@ -15,32 +15,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.about;
+package de.kaiserpfalzedv.commons.vaadin;
 
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.server.ErrorEvent;
+import com.vaadin.flow.server.ErrorHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
 
 /**
- * AboutView --
+ * VaadinErrorHandler --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-28
+ * @since 2.0.0  2022-06-01
  */
 @Slf4j
-@Route(value = "policy")
-@RoutePrefix("free")
-public class PolicyView extends FormLayout implements TraceNavigation {
+@ApplicationScoped
+public class VaadinErrorHandler extends VaadinSessionListener implements ErrorHandler {
 
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
+    @Override
+    public void error(ErrorEvent event) {
+        log.error(event.getThrowable().getMessage(), event.getThrowable());
 
-    public PolicyView() {
-        add(new Label("Policy"));
+        if (UI.getCurrent() != null) {
+            UI.getCurrent().access(() -> Notification.show("An error occured. Please contact support"));
+        }
     }
-
 }

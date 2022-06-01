@@ -15,32 +15,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.about;
+package de.kaiserpfalzedv.commons.vaadin.mainlayout;
 
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RoutePrefix;
-import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import com.vaadin.flow.component.Component;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.util.Map;
 
 /**
- * AboutView --
+ * ComponentEntry --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-28
+ * @since 2.0.0  2022-06-01
  */
-@Slf4j
-@Route(value = "policy")
-@RoutePrefix("free")
-public class PolicyView extends FormLayout implements TraceNavigation {
+@AllArgsConstructor
+@Getter
+class ComponentEntry implements Map.Entry<String, Component> {
+    private String key;
+    private Component value;
 
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
+    @Override
+    public Component setValue(Component value) {
+        this.value = value;
 
-    public PolicyView() {
-        add(new Label("Policy"));
+        return value;
     }
-
 }

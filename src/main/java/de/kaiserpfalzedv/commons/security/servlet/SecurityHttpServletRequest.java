@@ -17,6 +17,7 @@
 
 package de.kaiserpfalzedv.commons.security.servlet;
 
+import io.quarkus.oidc.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,8 +34,16 @@ import java.util.Optional;
 @Slf4j
 public class SecurityHttpServletRequest extends HttpServletRequestWrapper {
 
-    public SecurityHttpServletRequest(HttpServletRequest request) {
+    public SecurityHttpServletRequest(HttpServletRequest request, UserInfo userInfo) {
         super(request);
+
+        String sessionId = request.getSession().getId();
+        Principal principal = getUserPrincipal();
+
+        log.debug("Working on request. session='{}', uri='{}', principal='{}'", sessionId, request.getRequestURI(), principal != null ? principal.getName() : "not logged in");
+
+        request.getSession().setAttribute("idToken", principal);
+        request.getSession().setAttribute("userInfo", userInfo);
     }
 
     @Override
@@ -42,7 +51,11 @@ public class SecurityHttpServletRequest extends HttpServletRequestWrapper {
         Principal result = (Principal) getSession().getAttribute("idToken");
         result = Optional.ofNullable(result).orElseGet(super::getUserPrincipal);
 
-        log.debug("Principal requested. principal='{}', type='{}'", result, result.getClass().getCanonicalName());
+        if (result != null) {
+            log.debug("Principal requested. principal='{}', type='{}'", result, result.getClass().getCanonicalName());
+        } else {
+            log.warn("No principal found for session!");
+        }
         return result;
     }
 

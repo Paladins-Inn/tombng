@@ -26,6 +26,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import java.security.Principal;
 
 /**
@@ -35,7 +36,7 @@ import java.security.Principal;
  * @since 2.0.0  2022-05-29
  */
 @RequestScoped
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
 public class VaadinAuthenticationService implements AutoCloseable {
     final DefaultJWTCallerPrincipal principal;

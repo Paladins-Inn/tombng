@@ -35,9 +35,12 @@
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <failOnMissingWebXml>false</failOnMissingWebXml>
 
-        <vaadin.version>23.1.0.rc1</vaadin.version>
+        <vaadin.version>23.1.0.beta1</vaadin.version>
 
         <quarkus.version>2.9.2.Final</quarkus.version>
+        <kp-commons.version>2.2.0</kp-commons.version>
+        <kp-rpg.version>1.2.0</kp-rpg.version>
+
         <surefire-plugin.version>3.0.0-M6</surefire-plugin.version>
         <dependency-check-maven.version>7.1.0</dependency-check-maven.version>
     </properties>
@@ -106,6 +109,21 @@
                 <scope>import</scope>
                 <version>${vaadin.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>de.kaiserpfalz-edv.commons</groupId>
+                <artifactId>kp-commons-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${kp-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.kaiserpfalz-edv.rpg</groupId>
+                <artifactId>kp-rpg-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${kp-rpg.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -138,7 +156,10 @@
         <dependency>
             <groupId>de.kaiserpfalz-edv.commons</groupId>
             <artifactId>kp-commons-core</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.kaiserpfalz-edv.rpg</groupId>
+            <artifactId>kp-rpg-torg</artifactId>
         </dependency>
 
         <dependency>
@@ -180,6 +201,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-undertow</artifactId>
         </dependency>
 
         <dependency>

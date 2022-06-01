@@ -22,9 +22,10 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RoutePrefix;
 import de.kaiserpfalzedv.commons.vaadin.TraceNavigation;
-import de.kaiserpfalzedv.commons.vaadin.mainlayout.MainLayout;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.annotation.PostConstruct;
 
 /**
  * AboutView --
@@ -33,15 +34,26 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * @since 2.0.0  2022-05-28
  */
 @Slf4j
-@Route(value = "tos", layout = MainLayout.class)
+@Route(value = "tos")
 @RoutePrefix("free")
 public class TermsOfServiceView extends FormLayout implements TraceNavigation {
 
     @ConfigProperty(name = "application.name", defaultValue = "Application")
     String appName;
 
+    @ConfigProperty(name = "application.tos", defaultValue = "./.")
+    String tos;
+
     public TermsOfServiceView() {
         add(new Label("Terms of service"));
     }
 
+    @PostConstruct
+    public void init() {
+        if ("./.".equals(tos)) {
+            add(new Label("No terms of service defined."));
+        } else {
+            add(new Label(tos));
+        }
+    }
 }

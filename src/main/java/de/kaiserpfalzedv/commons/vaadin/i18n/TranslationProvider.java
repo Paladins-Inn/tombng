@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin;
+package de.kaiserpfalzedv.commons.vaadin.i18n;
 
 import com.vaadin.flow.i18n.I18NProvider;
 import com.vaadin.quarkus.annotation.VaadinServiceEnabled;
@@ -30,12 +30,12 @@ import java.util.Locale;
 @Unremovable
 @VaadinServiceScoped
 @VaadinServiceEnabled
-public class KesI18nProvider implements I18NProvider {
-
+public class TranslationProvider implements I18NProvider {
+    public static final String NAME = TranslationProvider.class.getCanonicalName();
     private final Translator translator;
 
     @Inject
-    public KesI18nProvider(Translator translator) {
+    public TranslationProvider(Translator translator) {
         this.translator = translator;
     }
 

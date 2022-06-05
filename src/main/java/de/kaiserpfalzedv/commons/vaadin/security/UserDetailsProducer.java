@@ -15,22 +15,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin;
+package de.kaiserpfalzedv.commons.vaadin.security;
 
-import com.vaadin.flow.server.ServiceInitEvent;
-import com.vaadin.flow.server.VaadinServiceInitListener;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.SecurityWebFilter;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.UserDetails;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
 /**
- * KesServiceInitListener --
+ * UserDetailsProducer --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-06-01
+ * @since 2.0.0  2022-06-03
  */
+@RequestScoped
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
-public class KesServiceInitListener implements VaadinServiceInitListener {
-    @Override
-    public void serviceInit(ServiceInitEvent event) {
-        log.debug("Service initialized");
+public class UserDetailsProducer {
+    private final HttpSession session;
+
+    @Produces
+    public UserDetails userDetails() {
+        return (UserDetails) session.getAttribute(SecurityWebFilter.PRINCIPAL);
     }
 }

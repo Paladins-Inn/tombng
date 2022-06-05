@@ -15,37 +15,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin;
+package de.kaiserpfalzedv.commons.vaadin.security;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.server.ErrorEvent;
-import com.vaadin.quarkus.annotation.VaadinServiceEnabled;
-import com.vaadin.quarkus.annotation.VaadinServiceScoped;
-import io.quarkus.arc.Unremovable;
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 /**
- * ErrorHandler -- For internal errors to log and display to user.
+ * KesServiceInitListener --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-01
  */
-@Unremovable
-@VaadinServiceScoped
-@VaadinServiceEnabled
 @Slf4j
-public class KesErrorHandler implements com.vaadin.flow.server.ErrorHandler {
-
+public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListener {
     @Override
-    public void error(ErrorEvent event) {
-        log.error(event.getThrowable().getMessage(), event.getThrowable());
+    public void serviceInit(ServiceInitEvent event) {
+        log.debug("Service initialized");
 
-        UI ui = KesUI.getCurrent();
-        Optional.ofNullable(ui).ifPresent(p -> p.access(() -> {
-            Notification.show("Error: " + event.getThrowable().getMessage());
-        }));
+        event.addRequestHandler(new QuarkusVaadinSecurityRequestHandler());
     }
 }

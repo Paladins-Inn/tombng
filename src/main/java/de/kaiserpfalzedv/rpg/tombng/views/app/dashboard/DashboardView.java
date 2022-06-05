@@ -15,34 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.rpg.tombng.about;
+package de.kaiserpfalzedv.rpg.tombng.views.app.dashboard;
 
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
+import de.kaiserpfalzedv.rpg.tombng.views.UserLayout;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import javax.enterprise.context.Dependent;
 
 /**
- * About --
+ * DashboardView --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-28
+ * @since 2.0.0  2022-06-01
  */
-@Path("/api/about")
+@PageTitle("Dash Board")
+@Route(value = "dashboard", layout = UserLayout.class)
+@RouteAlias(value = "", layout = UserLayout.class)
+@RolesAllowed({"user", "admin", "operator"})
+@Dependent
 @Slf4j
-public class About {
-    @ConfigProperty(name = "application.name", defaultValue = "Application")
-    String appName;
-
-    @ConfigProperty(name = "application.version", defaultValue = "999")
-    String appVersion;
-
-    @Path("/")
-    @GET
-    @RolesAllowed({"api"})
-    public String about() {
-        return appName + " v." + appVersion;
+public class DashboardView extends FormLayout {
+    @PostConstruct
+    public void init() {
+        add(new Label("Hier kommt ein geiles Dashboard hin."));
     }
 }

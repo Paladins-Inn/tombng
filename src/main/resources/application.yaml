@@ -3,19 +3,22 @@ application:
   name: Theatre of Mind Bot
   version: 1.0-SNAPSHOT
   http:
-    ui-base: /dashboard
+    ui-base: /ui/
 
 
 quarkus:
   oidc:
-    enabled: false
+    enabled: true
     application-type: web-app
     authentication:
       cookie-path: /
       user-info-required: true
+      authentication:
+        redirect-path: /ui/app/
+        restore-path-after-redirect: true
     logout:
       path: /oidc-logout
-      post-logout-path: /dashboard
+      post-logout-path: /ui/free/welcome
       backchannel:
         path: /back-channel-logout
     roles:
@@ -25,7 +28,7 @@ quarkus:
   security:
     users:
       embedded:
-        enabled: false
+        enabled: true
         plain-text: true
         realm-name: Technical Users
         users:
@@ -55,10 +58,49 @@ quarkus:
       allow-forwarded: true
       enable-forwarded-host: true
       forwarded-host-header: X-ORIGINAL-HOST
-
+    cors:
+      ~: true
+      origins: http://localhost:8080
+      methods: GET,PUT,POST,DELETE,HEAD
+    auth:
+      permission:
+        ui:
+          paths: /ui/app,/ui/app/*
+          policy: ui
+        free:
+          paths: /ui/*
+          policy: permit
+        admin:
+          paths: /ui/admin/*
+          policy: admin
+        api:
+          paths: /api/*
+          policy: api
+        operator:
+          paths: /q/*
+          policy: operator
+        checks:
+          paths: /q/health,/q/health/*
+          policy: checks
+        metrics:
+          paths: /q/metrics
+          policy: metrics
+      policy:
+        ui:
+          roles-allowed: user
+        api:
+          roles-allowed: api
+        admin:
+          roles-allowed: admin
+        operator:
+          roles-allowed: operator
+        checks:
+          roles-allowed: checks,operator
+        metrics:
+          roles-allowed: metrics,operator
     access-log:
       enabled: true
-      exclude-pattern: "/q/health.*"
+      exclude-pattern: "/(q|ui)/.*"
     record-request-start-time: true
     enable-compression: false
     enable-decompression: false

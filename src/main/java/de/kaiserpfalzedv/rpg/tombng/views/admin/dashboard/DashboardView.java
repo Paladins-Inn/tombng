@@ -15,39 +15,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.rpg.tombng.about;
+package de.kaiserpfalzedv.rpg.tombng.views.admin.dashboard;
 
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import lombok.RequiredArgsConstructor;
+import de.kaiserpfalzedv.rpg.tombng.views.AdminLayout;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
 
 /**
- * AboutView --
+ * Dashboard --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-06-01
+ * @since 2.0.0  2022-06-05
  */
-@Route("")
-@RouteAlias("about")
+@PageTitle("Admin Dash Board")
+@Route(value = "dashboard", layout = AdminLayout.class)
+@RouteAlias(value = "", layout = AdminLayout.class)
+@RolesAllowed({"admin"})
 @Dependent
-@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
-public class AboutView extends VerticalLayout {
-    @ConfigProperty(name = "application.name")
-    String appName;
+public class DashboardView extends FormLayout {
 
     @PostConstruct
-    @RolesAllowed({"user", "admin", "editor"})
     public void init() {
-        add(new Label(appName));
+        add(new Label("Hier kommt ein geiles Admin Dashboard hin."));
     }
 }

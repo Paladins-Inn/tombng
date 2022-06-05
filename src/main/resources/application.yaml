@@ -3,7 +3,7 @@ application:
   name: Theatre of Mind Bot
   version: 1.0-SNAPSHOT
   http:
-    ui-base: /ui/
+    ui-base: /ui/free/
 
 
 quarkus:

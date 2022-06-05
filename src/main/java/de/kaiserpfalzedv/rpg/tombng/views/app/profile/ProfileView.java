@@ -15,40 +15,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.kaiserpfalzedv.commons.vaadin.views.logout;
+package de.kaiserpfalzedv.rpg.tombng.views.app.profile;
 
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.internal.BeforeEnterHandler;
+import de.kaiserpfalzedv.commons.vaadin.views.personinfo.PersonInfoView;
+import de.kaiserpfalzedv.rpg.tombng.views.UserLayout;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.Dependent;
 
 /**
- * LogoutView --
+ * ProfileView --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-06-01
+ * @since 2.0.0  2022-06-05
  */
-@PageTitle("Logout")
-@Route(value = "logout")
+@PageTitle("User Profile")
+@Route(value = "profile", layout = UserLayout.class)
+@RolesAllowed({"user"})
 @Dependent
-@PermitAll
 @Slf4j
-public class LogoutView extends Div implements BeforeEnterHandler {
-    @ConfigProperty(name = "quarkus.oidc.logout.path", defaultValue = "/logout")
-    String quarkusLogoutPage;
+public class ProfileView extends PersonInfoView {
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        log.info("Closing session. session='{}'", event.getUI().getSession().getSession().getId());
-        event.getUI().getSession().close();
-        event.getUI().getSession().getSession().invalidate();
-        event.getUI().getPage().setLocation(quarkusLogoutPage);
-        event.getUI().close();
-    }
 }

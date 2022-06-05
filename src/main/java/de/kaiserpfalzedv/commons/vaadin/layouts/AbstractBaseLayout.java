@@ -26,9 +26,12 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarGroup;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -41,6 +44,8 @@ import de.kaiserpfalzedv.commons.vaadin.EventBusRegistered;
 import de.kaiserpfalzedv.commons.vaadin.security.PermissionHolding;
 import de.kaiserpfalzedv.commons.vaadin.security.servlet.UserDetails;
 import de.kaiserpfalzedv.commons.vaadin.views.logout.LogoutView;
+import de.kaiserpfalzedv.rpg.tombng.views.app.profile.ProfileView;
+import io.quarkus.security.Authenticated;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -85,8 +90,13 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
     protected final H1 viewTitle = new H1();
 
     protected final Avatar avatar = new Avatar();
+    protected final MenuBar menuBar = new MenuBar();
+    protected final MenuItem avatarMenuItem = menuBar.addItem(avatar);
+    protected final SubMenu avatarContextMenu = avatarMenuItem.getSubMenu();
     protected final AvatarGroup loggedInUsers = new AvatarGroup();
     protected final Tabs menu = new Tabs();
+
+    protected final RouterLink logoutLink = new RouterLink("Logout", LogoutView.class);
 
 
     @PostConstruct
@@ -110,11 +120,6 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
     }
 
     protected Component createHeader() {
-        if (userInfo != null) {
-            avatar.setName(userInfo.getName());
-            avatar.setImage(userInfo.getImage());
-        }
-
         header.setId("header");
         header.getThemeList().set("dark", true);
         header.setWidthFull();
@@ -128,7 +133,16 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
 
         header.add(loggedInUsers);
 
-        header.add(avatar);
+        if (userInfo != null) {
+            avatar.setName(userInfo.getName());
+            avatar.setImage(userInfo.getImage());
+        }
+
+        header.add(menuBar);
+        avatarContextMenu.addItem(new RouterLink("Profile", ProfileView.class));
+        avatarContextMenu.addItem("Settings");
+        avatarContextMenu.addItem("Help");
+        avatarContextMenu.addItem(new RouterLink("Logout", LogoutView.class));
 
 
         return header;
@@ -165,6 +179,10 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
                 .forEach(r -> menu.add(createTab(r)));
 
         addMenu();
+
+        if (userInfo != null) {
+            menu.add(new Tab(logoutLink));
+        }
     }
 
     public abstract void addMenu();
@@ -213,7 +231,9 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
      * @return if the class is denied for everyone.
      */
     private boolean hasPermission(Class<?> target) {
-        return !isDeniedToAll(target) && (isPermittedForAll(target) || userHasRole(target));
+        return !isDeniedToAll(target)
+                && !needsAdditionalAuthentication(target)
+                && (isPermittedForAll(target) || userHasRole(target));
     }
 
     /**
@@ -267,14 +287,27 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
                 && Arrays.stream(rolesAllowed).anyMatch(r -> userInfo.isUserInRole(r));
     }
 
+    private boolean needsAdditionalAuthentication(Class<?> target) {
+        boolean result = (userInfo == null) && target.isAnnotationPresent(Authenticated.class);
+
+        log.trace("checking for authentication required. view='{}', authenticated='{}'", target.getSimpleName(), result);
+
+        return result;
+    }
+
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         if (LogoutView.class.isAssignableFrom(event.getNavigationTarget())) {
-            log.info("Closing session. session='{}'", event.getUI().getSession().getSession().getId());
+            if (userInfo != null) {
+                log.info("Closing session. session='{}'", event.getUI().getSession().getSession().getId());
 
-            event.getUI().getPage().setLocation(quarkusLogoutPage);
-            event.getUI().close();
-            event.getUI().getSession().close();
+                event.getUI().getPage().setLocation(quarkusLogoutPage);
+                event.getUI().close();
+                event.getUI().getSession().close();
+            } else {
+                event.getUI().getPage().getHistory().go(0);
+                event.getUI().getPage().reload();
+            }
         }
 
         denyEntryToProtectedPagesWithoutPermission(event.getNavigationTarget(), event.getUI());

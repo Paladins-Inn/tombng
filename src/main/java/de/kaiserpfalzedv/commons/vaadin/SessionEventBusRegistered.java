@@ -19,10 +19,13 @@ package de.kaiserpfalzedv.commons.vaadin;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.flow.server.VaadinSession;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 /**
- * EventBusRegistered -- Access to event bus.
+ * SessionEventBusRegistered -- Access to event bus.
  * <p>
  * The eventbus is shared between the HttpSession and the VaadinSession and has the session id of the HttpSession as
  * identifier.
@@ -30,10 +33,10 @@ import org.slf4j.LoggerFactory;
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-01
  */
-public interface EventBusRegistered {
+public interface SessionEventBusRegistered {
     default EventBus getBus() {
         if (VaadinSession.getCurrent() == null) {
-            LoggerFactory.getLogger(getClass()).warn("Can't register to session event bus. There is no session.");
+            getLog().warn("Can't register to session event bus. There is no session.");
 
             return new EventBus("session-less");
         }
@@ -41,60 +44,60 @@ public interface EventBusRegistered {
         return loadEventBusFromVaadinSessionOrHttpSessionOrCreateNewOne(getHttpSessionId());
     }
 
-    private String getHttpSessionId() {
-        return VaadinSession.getCurrent().getSession().getId();
+    private VaadinSession getHttpSessionId() {
+        return VaadinSession.getCurrent();
     }
 
-    private EventBus loadEventBusFromVaadinSessionOrHttpSessionOrCreateNewOne(String sessionId) {
+    private EventBus loadEventBusFromVaadinSessionOrHttpSessionOrCreateNewOne(final VaadinSession session) {
         EventBus bus = VaadinSession.getCurrent().getAttribute(EventBus.class);
-        if (bus == null) {
-            bus = getEventBusFromSessionOrCreateNewOne(sessionId);
 
-            VaadinSession.getCurrent().lock();
-            VaadinSession.getCurrent().setAttribute(EventBus.class, bus);
-            VaadinSession.getCurrent().unlock();
-        }
-        return bus;
+        return Optional.ofNullable(bus).orElse(getEventBusFromSessionOrCreateNewOne(session));
     }
 
-    private EventBus getEventBusFromSessionOrCreateNewOne(String sessionId) {
-        LoggerFactory.getLogger(getClass()).info("No event bus in vaadin session. Checking http session. session='{}'",
-                sessionId);
+    private EventBus getEventBusFromSessionOrCreateNewOne(final VaadinSession session) {
+        getLog().info("No event bus in vaadin session. Checking http session. session='{}'",
+                session.getSession().getId());
 
         EventBus result = (EventBus) VaadinSession.getCurrent().getSession().getAttribute(EventBus.class.getCanonicalName());
-        if (result == null) {
-            result = createNewEventBusAndRegisterToHttpSession(sessionId);
-        }
+
+        return Optional.ofNullable(result).orElse(createNewEventBusAndRegisterToHttpSession(session));
+    }
+
+    private EventBus createNewEventBusAndRegisterToHttpSession(final VaadinSession session) {
+        getLog().info("No event bus in http session. Creating a new one. session='{}'",
+                session.getSession().getId());
+
+        EventBus result = new EventBus(session.getSession().getId());
+        registerEventBusToVaadinAndHTTPSession(session, result);
 
         return result;
     }
 
-    private EventBus createNewEventBusAndRegisterToHttpSession(String sessionId) {
-        LoggerFactory.getLogger(getClass()).info("No event bus in http session. Creating a new one. session='{}'",
-                sessionId);
-
-        EventBus result = new EventBus(sessionId);
-        VaadinSession.getCurrent().getSession().setAttribute(EventBus.class.getCanonicalName(), result);
-
-        return result;
+    private void registerEventBusToVaadinAndHTTPSession(final VaadinSession session, final EventBus bus) {
+        session.access(() -> session.setAttribute(EventBus.class, bus));
+        session.getSession().setAttribute(EventBus.class.getCanonicalName(), bus);
     }
 
     default void registerToBus() {
         getBus().register(this);
-        LoggerFactory.getLogger(getClass()).debug("Registered to bus. bus='{}', object={}",
+        getLog().debug("Registered to bus. bus='{}', object={}",
                 getBus().identifier(), this);
     }
 
     default void unregisterFromBus() {
         try {
             getBus().unregister(this);
-            LoggerFactory.getLogger(getClass()).debug("Unregistered from bus. bus='{}', object={}",
+            getLog().debug("Unregistered from bus. bus='{}', object={}",
                     getBus().identifier(), this);
         } catch (IllegalArgumentException e) {
-            LoggerFactory.getLogger(getClass())
-                    .warn("This object has not been registered to the session event bus. bus='{}', object={}",
-                            getBus().identifier(), this
-                    );
+            getLog().warn("This object has not been registered to the session event bus. bus='{}', object={}",
+                    getBus().identifier(), this
+            );
         }
+    }
+
+
+    private Logger getLog() {
+        return LoggerFactory.getLogger(getClass());
     }
 }

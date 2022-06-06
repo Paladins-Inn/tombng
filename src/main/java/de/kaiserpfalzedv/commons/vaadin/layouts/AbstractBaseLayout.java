@@ -36,7 +36,7 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.*;
-import de.kaiserpfalzedv.commons.vaadin.EventBusRegistered;
+import de.kaiserpfalzedv.commons.vaadin.SessionEventBusRegistered;
 import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
 import de.kaiserpfalzedv.commons.vaadin.security.LogoutView;
 import de.kaiserpfalzedv.commons.vaadin.security.PermissionChecker;
@@ -60,7 +60,7 @@ import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
  */
 @ToString(callSuper = true, onlyExplicitlyIncluded = true)
 @Slf4j
-public abstract class AbstractBaseLayout extends AppLayout implements EventBusRegistered, PermissionHolding,
+public abstract class AbstractBaseLayout extends AppLayout implements SessionEventBusRegistered, PermissionHolding,
         BeforeEnterObserver, BeforeLeaveObserver {
     @ConfigProperty(name = "application.name")
     @ToString.Include

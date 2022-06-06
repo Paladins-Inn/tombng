@@ -23,7 +23,7 @@ import com.vaadin.flow.server.*;
 import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.quarkus.QuarkusVaadinServlet;
 import com.vaadin.quarkus.QuarkusVaadinServletService;
-import de.kaiserpfalzedv.commons.vaadin.EventBusRegistered;
+import de.kaiserpfalzedv.commons.vaadin.SessionEventBusRegistered;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -62,7 +62,7 @@ import java.io.IOException;
 @Slf4j
 public class QuarkusVaadinSecurityServlet extends QuarkusVaadinServlet implements
         SessionInitListener, SessionDestroyListener, UIInitListener,
-        EventBusRegistered {
+        SessionEventBusRegistered {
     @Inject
     BeanManager beanManager;
 

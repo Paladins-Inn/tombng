@@ -18,24 +18,25 @@
 package de.kaiserpfalzedv.commons.vaadin.security;
 
 import com.vaadin.flow.server.*;
-import de.kaiserpfalzedv.commons.vaadin.profile.Person;
 import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
 import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityRequestHandler;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.SecurityWebFilter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.enterprise.context.Dependent;
 import javax.transaction.Transactional;
-import java.security.Principal;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.util.Optional;
 
 /**
- * KesServiceInitListener --
+ * QuarkusVaadinServiceInitListener -- Handles the principal of the vaadin session.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-01
  */
+@Dependent
 @Slf4j
 public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListener, SessionInitListener, SessionDestroyListener {
+
     @Override
     public void serviceInit(ServiceInitEvent event) {
         log.debug("Service initialized");
@@ -50,34 +51,23 @@ public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListen
     @Override
     public void sessionInit(SessionInitEvent event) throws ServiceException {
         log.debug("Session start. session='{}'", event.getSession().getSession().isNew());
+
+        UserDetails userDetails = (UserDetails) event.getSession().getSession().getAttribute(SecurityWebFilter.PRINCIPAL);
+
+        Optional.ofNullable(userDetails).ifPresent(u -> {
+            event.getSession().setAttribute(UserDetails.class, userDetails);
+
+            log.trace("copied user profile to vaadin session. session='{}', profile='{}'",
+                    event.getSession().getSession().getId(),
+                    userDetails.getId()
+            );
+        });
     }
 
 
     @Override
     @Transactional
     public void sessionDestroy(SessionDestroyEvent event) {
-        UserDetails userDetails = (UserDetails) event.getSession().getSession().getAttribute(Principal.class.getCanonicalName());
-
-        if (userDetails != null) {
-            log.debug("Ending session for user. session='{}', user='{}'", event.getSession().getSession().getId(),
-                    userDetails.getId()
-            );
-
-            if (userDetails instanceof Person) {
-                Person person = Person.findById(userDetails.getId());
-                person.lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
-                person.persistAndFlush();
-            } else {
-                log.warn("User is not of correct type. session='{}', user='{}', type='{}'",
-                        event.getSession().getSession().getId(),
-                        userDetails.getId(),
-                        userDetails.getClass().getCanonicalName()
-                );
-            }
-        } else {
-            log.trace("No user logged in in the session to destroy.");
-        }
-
         log.debug("Session end. session='{}'", event.getSession().getSession().isNew());
     }
 }

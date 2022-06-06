@@ -17,8 +17,9 @@
 
 package de.kaiserpfalzedv.commons.vaadin.security.servlet;
 
+import de.kaiserpfalzedv.commons.vaadin.profile.Person;
 import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetailsLoader;
+import de.kaiserpfalzedv.commons.vaadin.profile.UserDetailsHandler;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,9 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Optional;
 
 /**
  * SecurityWebFilter --
@@ -43,7 +47,7 @@ import java.security.Principal;
 public class SecurityWebFilter implements Filter {
     public static final String PRINCIPAL = Principal.class.getCanonicalName();
 
-    private final UserDetailsLoader loader;
+    private final UserDetailsHandler userDetailsHandler;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -59,12 +63,33 @@ public class SecurityWebFilter implements Filter {
         if (principal instanceof DefaultJWTCallerPrincipal) {
             DefaultJWTCallerPrincipal jwt = (DefaultJWTCallerPrincipal) principal;
 
-            log.debug("User is logged in. session='{}', principal={}", request.getSession().getId(), principal);
+            log.debug("User is logged in. session='{}', principal={}", request.getSession().getId(), jwt);
 
-            UserDetails user = loader.load(jwt);
-            addPrincipalToSession(request, user);
+            UserDetails userDetails = (UserDetails) request.getSession().getAttribute(PRINCIPAL);
+            if (userDetails != null && principal.equals(userDetails.getPrincipal())) {
+                log.trace("JWT principal already in session. profile='{}', session='{}', issuer='{}', subject='{}'",
+                        ((UserDetails) request.getSession().getAttribute(PRINCIPAL)).getId(),
+                        request.getSession().getId(),
+                        ((DefaultJWTCallerPrincipal) userDetails.getPrincipal()).getIssuer(),
+                        ((DefaultJWTCallerPrincipal) userDetails.getPrincipal()).getSubject()
+                );
+            } else {
+                log.trace("Changing principal in session. JWT principal changed. session='{}', issuer='{}', subject='{}'",
+                        request.getSession().getId(),
+                        ((DefaultJWTCallerPrincipal) principal).getIssuer(),
+                        ((DefaultJWTCallerPrincipal) principal).getSubject()
+                );
+                Optional<UserDetails> user = userDetailsHandler.createOrLoadForLogin(jwt);
+                user.ifPresentOrElse(
+                        u -> {
+                            ((Person) u).lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
+                            addPrincipalToSession(request, u);
+                        },
+                        () -> {
 
-            log.trace("Added user details to session. session='{}', user={}", request.getSession().getId(), user);
+                        }
+                );
+            }
         } else {
             log.debug("User is not logged in. session='{}', principal={}, type='{}'",
                     request.getSession().getId(), principal, principal != null ? principal.getClass().getCanonicalName() : "./.");
@@ -75,8 +100,10 @@ public class SecurityWebFilter implements Filter {
         filterChain.doFilter(servletRequest, servletResponse);
     }
 
-    private void addPrincipalToSession(HttpServletRequest request, UserDetails user) {
+    private void addPrincipalToSession(HttpServletRequest request, final UserDetails user) {
         request.getSession().setAttribute(PRINCIPAL, user);
+
+        log.trace("Added user details to session. session='{}', user={}", request.getSession().getId(), user);
     }
 
     private void removePrincipalFromSession(HttpServletRequest request) {

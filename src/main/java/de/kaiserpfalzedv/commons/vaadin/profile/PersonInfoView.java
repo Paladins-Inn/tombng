@@ -22,10 +22,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
-import com.vaadin.flow.router.OptionalParameter;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.*;
+import de.kaiserpfalzedv.commons.vaadin.layouts.AbstractBaseLayout;
 import io.quarkus.security.Authenticated;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
@@ -48,7 +47,7 @@ import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
 @Dependent
 @NoArgsConstructor
 @Slf4j
-public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID> {
+public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID>, AfterNavigationObserver {
 
     @Inject
     UserDetails data;
@@ -79,7 +78,7 @@ public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID> 
 
 
         firstLogin = new DateTimePicker(getTranslation(PROFILE_LOGIN_FIRST));
-        binder.forField(firstLogin).bind(d -> d.getFirstLogin().toLocalDateTime(), null);
+        binder.forField(firstLogin).bind(d -> d.getCreated().atOffset(ZoneOffset.UTC).toLocalDateTime(), null);
         lastLogin = new DateTimePicker(getTranslation(PROFILE_LOGIN_LAST));
         binder.forField(lastLogin).bind(d -> d.getLastLogin().toLocalDateTime(), null);
 
@@ -96,7 +95,6 @@ public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID> 
                 email,
                 firstLogin, lastLogin
         );
-
     }
 
     @Override
@@ -115,7 +113,7 @@ public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID> 
                     ));
                 }
             } else {
-                log.warn("User tried to load special profile without being admin. user='{}', tried-to-load='{}'", data.getImage(), id);
+                log.warn("User tried to load special profile without being admin. user='{}', tried-to-load='{}'", data.getAvatar(), id);
                 getUI().ifPresent(ui -> Notification.show(
                         getTranslation(ERROR_NO_ACCESS, "admin"),
                         5000,
@@ -123,5 +121,17 @@ public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID> 
                 ));
             }
         }
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        getParent().ifPresentOrElse(
+                c -> {
+                    if (c instanceof AbstractBaseLayout && data != null) {
+                        ((AbstractBaseLayout) c).changeViewTitle(getTranslation(VIEWS_PERSON_INFO) + " - " + data.getName());
+                    }
+                },
+                () -> log.trace("No parent for person view.")
+        );
     }
 }

@@ -35,16 +35,18 @@ import java.util.Optional;
  */
 public interface SessionEventBusRegistered {
     default EventBus getBus() {
-        if (VaadinSession.getCurrent() == null) {
+        if (getVaadinSession() == null) {
             getLog().warn("Can't register to session event bus. There is no session.");
 
             return new EventBus("session-less");
         }
 
-        return loadEventBusFromVaadinSessionOrHttpSessionOrCreateNewOne(getHttpSessionId());
+        synchronized (getVaadinSession()) {
+            return loadEventBusFromVaadinSessionOrHttpSessionOrCreateNewOne(getVaadinSession());
+        }
     }
 
-    private VaadinSession getHttpSessionId() {
+    private VaadinSession getVaadinSession() {
         return VaadinSession.getCurrent();
     }
 

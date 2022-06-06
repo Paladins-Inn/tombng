@@ -27,6 +27,7 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarGroup;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -70,6 +71,8 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
     String appVersion;
     @ConfigProperty(name = "quarkus.oidc.logout.path", defaultValue = "/logout")
     String quarkusLogoutPage;
+    @ConfigProperty(name = "application.http.login", defaultValue = "/login")
+    String quarkusLoginPage;
 
 
     @Inject
@@ -95,6 +98,8 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
             LogoutView.class
     );
 
+    protected Anchor loginLink;
+
 
     @PostConstruct
     public void init() {
@@ -102,13 +107,17 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
 
         log.trace("Creating Layout. object={}", this);
 
+        loginLink = new Anchor(
+                quarkusLoginPage,
+                getTranslation(ACTIONS_LOGIN)
+        );
+
         setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeader());
 
         createMenu();
 
         addToDrawer(createDrawer(menu));
-
     }
 
     @PreDestroy
@@ -140,15 +149,19 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
     }
 
     private void createAvatarContextMenu() {
-        if (userInfo != null) {
-            avatar.setName(userInfo.getName());
-            avatar.setImage(userInfo.getImage());
-        }
         avatarContextMenu.removeAll();
         avatarContextMenu.addItem(new RouterLink(getTranslation(VIEWS_PERSON_INFO), ProfileView.class));
         avatarContextMenu.addItem(getTranslation(ACTIONS_SETTINGS));
         avatarContextMenu.addItem(getTranslation(ACTIONS_HELP));
-        avatarContextMenu.addItem(new RouterLink(getTranslation(ACTIONS_LOGOUT), LogoutView.class));
+
+        if (userInfo != null) {
+            avatar.setName(userInfo.getName());
+            avatar.setImage(userInfo.getAvatar());
+
+            avatarContextMenu.addItem(new RouterLink(getTranslation(ACTIONS_LOGOUT), LogoutView.class));
+        } else {
+            avatarContextMenu.addItem(new Anchor(quarkusLoginPage, getTranslation(ACTIONS_LOGIN)));
+        }
     }
 
     protected Component createDrawer(final Tabs menu) {
@@ -185,6 +198,8 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
 
         if (userInfo != null) {
             menu.add(new Tab(logoutLink));
+        } else {
+            menu.add(new Tab(loginLink));
         }
     }
 
@@ -201,6 +216,19 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
         return result;
     }
 
+
+    /**
+     * Replaces the current view title with the given Text, it will not be handled by {@link #getTranslation(String, Object...)}.
+     *
+     * @param title The new title to be set.
+     */
+    public void changeViewTitle(final String title) {
+        viewTitle.setText(title);
+
+        UI.getCurrent().getPage().setTitle(title);
+    }
+
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         log.trace("before enter. session='{}', ui='{}', layout='{}', router='{}', target='{}', allowed='{}'",
@@ -213,8 +241,7 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
         );
 
         String title = i18nReadPageTitle(event.getNavigationTarget());
-
-        viewTitle.setText(title);
+        changeViewTitle(title);
     }
 
     private String i18nReadPageTitle(final Class<?> target) {
@@ -222,6 +249,8 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
 
         if (target.isAnnotationPresent(PageTitle.class)) {
             result = getTranslation(UI.getCurrent().getLocale(), target.getAnnotation(PageTitle.class).value());
+        } else if (HasDynamicTitle.class.isAssignableFrom(target)) {
+            result = target.getSimpleName().replace("View", "");
         } else {
             result = target.getSimpleName().replace("View", "");
         }
@@ -239,7 +268,7 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
                 event.getUI().close();
                 event.getUI().getSession().close();
             } else {
-                event.getUI().getPage().getHistory().go(0);
+                event.getUI().getPage().getHistory().back();
                 event.getUI().getPage().reload();
             }
         }

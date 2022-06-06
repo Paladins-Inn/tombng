@@ -17,38 +17,22 @@
 
 package de.kaiserpfalzedv.commons.vaadin.profile;
 
-import de.kaiserpfalzedv.commons.core.resources.HasId;
-import de.kaiserpfalzedv.commons.core.resources.HasName;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 
-import java.io.Serializable;
-import java.security.Principal;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Set;
+import javax.transaction.Transactional;
+import java.util.Optional;
 
 /**
- * UserDetails -- User information for the UI.
+ * UserDetailsHandler -- The handling of the userdetails.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
- * @since 2.0.0  2022-05-29
+ * @since 2.0.0  2022-06-06
  */
-public interface UserDetails extends Serializable, Principal, HasName, HasId {
-    Principal getPrincipal();
+public interface UserDetailsHandler {
+    Optional<UserDetails> load(final DefaultJWTCallerPrincipal principal);
 
-    String getEmail();
+    UserDetails create(final DefaultJWTCallerPrincipal principal);
 
-    String getTenant();
-
-    String getAvatar();
-
-    boolean isUserInRole(final String role);
-
-    Set<String> getRoles();
-
-    OffsetDateTime getLastLogin();
-
-
-    Instant getCreated();
-
-    Instant getUpdated();
+    @Transactional
+    Optional<UserDetails> createOrLoadForLogin(DefaultJWTCallerPrincipal principal);
 }

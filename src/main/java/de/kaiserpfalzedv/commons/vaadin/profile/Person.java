@@ -30,8 +30,10 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -88,20 +90,24 @@ public class Person extends PanacheEntityBase implements UserDetails {
     @Column(name = "EMAIL", length = 100, nullable = false)
     public String email;
 
-
-    @Column(name = "FIRST_LOGIN", nullable = false)
-    @CreationTimestamp
-    @Getter
-    @EqualsAndHashCode.Exclude
-    @Builder.Default
-    public OffsetDateTime firstLogin = OffsetDateTime.now(ZoneOffset.UTC);
-
     @Column(name = "LAST_LOGIN")
-    @UpdateTimestamp
     @Getter
     @EqualsAndHashCode.Exclude
     @Builder.Default
     public OffsetDateTime lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
+
+
+    @Column(name = "CREATED", nullable = false)
+    @CreationTimestamp
+    @Getter
+    @EqualsAndHashCode.Exclude
+    public Instant created;
+
+    @Column(name = "UPDATED")
+    @UpdateTimestamp
+    @Getter
+    @EqualsAndHashCode.Exclude
+    public Instant updated;
 
 
     @Transient
@@ -111,7 +117,8 @@ public class Person extends PanacheEntityBase implements UserDetails {
 
     @Transient
     @JsonIgnore
-    private String roleClaim;
+    @Getter
+    public String roleClaim;
 
 
     public static Person findByIssuerAndSubject(final String issuer, final String subject) {
@@ -131,13 +138,18 @@ public class Person extends PanacheEntityBase implements UserDetails {
     }
 
     @Override
-    public String getImage() {
+    public String getAvatar() {
         return Gravatar.getUrlWithEmail(getEmail());
     }
 
     @Override
     public boolean isUserInRole(String role) {
         return principal != null
-                && ((Set<String>) principal.getClaim(roleClaim)).contains(role);
+                && getRoles().contains(role);
+    }
+
+    @Override
+    public Set<String> getRoles() {
+        return principal != null ? principal.getClaim(roleClaim) : Collections.emptySet();
     }
 }

@@ -19,6 +19,7 @@ package de.kaiserpfalzedv.commons.vaadin.security;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
+import de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys;
 import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
 import io.quarkus.security.Authenticated;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * PermissionChecker --
@@ -108,6 +110,14 @@ public class PermissionChecker {
                 && Arrays.stream(rolesAllowed).anyMatch(r -> userInfo.isUserInRole(r));
     }
 
+    private String neededRoles(Class<?> target) {
+        if (target.isAnnotationPresent(RolesAllowed.class)) {
+            return Arrays.stream(target.getAnnotation(RolesAllowed.class).value()).collect(Collectors.joining(",", "[", "]"));
+        } else {
+            return "";
+        }
+    }
+
     private boolean needsAdditionalAuthentication(Class<?> target, UserDetails userInfo) {
         boolean result = (userInfo == null) && target.isAnnotationPresent(Authenticated.class);
 
@@ -125,13 +135,17 @@ public class PermissionChecker {
 
             if (userInfo != null) {
                 log.info("User has no permission for the target page. Stay on this page!");
-                Notification.show("Sorry, you don't have access to this page!");
-                ui.getPage().getHistory().go(0);
+                ui.access(() -> {
+                    ui.getPage().getHistory().go(0);
+                    Notification.show(ui.getTranslation(DefaultComponentsI18nKeys.ERROR_NO_ACCESS, neededRoles(target)));
+                });
             } else {
                 log.info("User is not logged in. Will be redirected to login page for protected page access.");
-                ui.getPage().setLocation(applicationLoginPage);
-                ui.close();
-                ui.getSession().close();
+                ui.access(() -> {
+                    ui.getPage().setLocation(applicationLoginPage);
+                    ui.close();
+                    ui.getSession().close();
+                });
                 log.trace("Redirected ...");
             }
         }

@@ -17,6 +17,7 @@
 
 package de.kaiserpfalzedv.rpg.tombng.ui;
 
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RoutePrefix;
 import com.vaadin.quarkus.annotation.NormalUIScoped;
@@ -35,6 +36,7 @@ import javax.annotation.security.RolesAllowed;
  */
 @Unremovable
 @NormalUIScoped
+@PreserveOnRefresh
 @RoutePrefix("admin")
 @RolesAllowed({"admin"})
 @Slf4j

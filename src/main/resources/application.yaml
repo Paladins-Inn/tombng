@@ -4,6 +4,7 @@ application:
   version: 1.0-SNAPSHOT
   http:
     ui-base: /ui/free/
+    login: /ui/app/
 
 
 quarkus:
@@ -13,9 +14,8 @@ quarkus:
     authentication:
       cookie-path: /
       user-info-required: true
-      authentication:
-        redirect-path: /ui/app/
-        restore-path-after-redirect: true
+      redirect-path: /ui/app/
+      restore-path-after-redirect: true
     logout:
       path: /oidc-logout
       post-logout-path: /ui/free/welcome
@@ -125,7 +125,7 @@ quarkus:
     level: INFO
     category:
       "de.kaiserpfalzedv":
-        level: INFO
+        level: TRACE
       "com.vaadin":
         level: INFO
     metrics:

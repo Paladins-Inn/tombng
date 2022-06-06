@@ -41,11 +41,15 @@
             <column name="EMAIL" type="varchar2(100)">
                 <constraints notNullConstraintName="PERSONS_EMAIL_NNK"/>
             </column>
-            <column name="first_login" type="TIMESTAMPTZ">
-                <constraints notNullConstraintName="PERSONS_FIRST_LOGIN_NNK"/>
-            </column>
             <column name="LAST_LOGIN" type="TIMESTAMPTZ">
                 <constraints notNullConstraintName="PERSONS_LAST_LOGIN_NNK"/>
+            </column>
+
+            <column name="CREATED" type="TIMESTAMPTZ">
+                <constraints notNullConstraintName="PERSONS_CREATED_NNK"/>
+            </column>
+            <column name="UPDATED" type="TIMESTAMPTZ">
+                <constraints notNullConstraintName="PERSONS_UPDATED_NNK"/>
             </column>
         </createTable>
 

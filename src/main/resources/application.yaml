@@ -125,9 +125,9 @@ quarkus:
     level: INFO
     category:
       "de.kaiserpfalzedv":
-        level: TRACE
+        level: INFO
       "com.vaadin":
-        level: TRACE
+        level: INFO
     metrics:
       enabled: true
 
@@ -152,7 +152,10 @@ org:
           propagateHeaders: Authorization
 
 "%dev":
-  quarkus:
-    log:
+  quarkus: &quarkus
+    log: &log
       console:
         json: false
+
+"%test":
+  quarkus: *quarkus

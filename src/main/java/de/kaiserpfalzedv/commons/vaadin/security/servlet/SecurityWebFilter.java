@@ -17,6 +17,8 @@
 
 package de.kaiserpfalzedv.commons.vaadin.security.servlet;
 
+import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.profile.UserDetailsLoader;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -46,6 +46,6 @@ public class TranslationProvider implements I18NProvider {
 
     @Override
     public String getTranslation(String s, Locale locale, Object... objects) {
-        return getTranslation(s, locale, objects);
+        return translator.getTranslation(s, locale, objects);
     }
 }

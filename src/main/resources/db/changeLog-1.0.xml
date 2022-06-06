@@ -38,6 +38,9 @@
             <column name="NAME" type="varchar2(100)">
                 <constraints notNullConstraintName="PERSONS_NAME_NNK"/>
             </column>
+            <column name="EMAIL" type="varchar2(100)">
+                <constraints notNullConstraintName="PERSONS_EMAIL_NNK"/>
+            </column>
             <column name="first_login" type="TIMESTAMPTZ">
                 <constraints notNullConstraintName="PERSONS_FIRST_LOGIN_NNK"/>
             </column>

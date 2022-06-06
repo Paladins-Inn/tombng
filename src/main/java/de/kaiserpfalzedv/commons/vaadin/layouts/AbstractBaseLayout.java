@@ -17,7 +17,6 @@
 
 package de.kaiserpfalzedv.commons.vaadin.layouts;
 
-import com.google.common.eventbus.Subscribe;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.UI;
@@ -28,11 +27,8 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarGroup;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -41,25 +37,23 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.*;
 import de.kaiserpfalzedv.commons.vaadin.EventBusRegistered;
+import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.security.LogoutView;
+import de.kaiserpfalzedv.commons.vaadin.security.PermissionChecker;
 import de.kaiserpfalzedv.commons.vaadin.security.PermissionHolding;
-import de.kaiserpfalzedv.commons.vaadin.security.servlet.UserDetails;
-import de.kaiserpfalzedv.commons.vaadin.views.logout.LogoutView;
-import de.kaiserpfalzedv.rpg.tombng.views.app.profile.ProfileView;
-import io.quarkus.security.Authenticated;
+import de.kaiserpfalzedv.rpg.tombng.ui.app.profile.ProfileView;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import java.util.Arrays;
+
+import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
 
 /**
- * AbstractBaseLayout --
+ * AbstractBaseLayout -- Default base layout for a default Vaadin application.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-01
@@ -74,20 +68,20 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
     @ConfigProperty(name = "application.version")
     @ToString.Include
     String appVersion;
-
     @ConfigProperty(name = "quarkus.oidc.logout.path", defaultValue = "/logout")
     String quarkusLogoutPage;
 
-    @ConfigProperty(name = "quarkus.oidc.authentication.redirect-path", defaultValue = "/ui/app/")
-    String applicationLoginPage;
 
     @Inject
     @ToString.Include
     protected UserDetails userInfo;
 
+    @Inject
+    protected PermissionChecker permissionChecker;
+
 
     protected final HorizontalLayout header = new HorizontalLayout();
-    protected final H1 viewTitle = new H1();
+    protected final Label viewTitle = new Label(appName);
 
     protected final Avatar avatar = new Avatar();
     protected final MenuBar menuBar = new MenuBar();
@@ -96,7 +90,10 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
     protected final AvatarGroup loggedInUsers = new AvatarGroup();
     protected final Tabs menu = new Tabs();
 
-    protected final RouterLink logoutLink = new RouterLink("Logout", LogoutView.class);
+    protected final RouterLink logoutLink = new RouterLink(
+            getTranslation(ACTIONS_LOGOUT),
+            LogoutView.class
+    );
 
 
     @PostConstruct
@@ -124,28 +121,34 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
         header.getThemeList().set("dark", true);
         header.setWidthFull();
         header.setSpacing(false);
-        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setAlignItems(FlexComponent.Alignment.STRETCH);
 
         header.add(new DrawerToggle());
 
         viewTitle.setWidth(70f, Unit.PERCENTAGE);
+        viewTitle.setHeightFull();
         header.add(viewTitle);
 
         header.add(loggedInUsers);
 
+
+        header.add(menuBar);
+        createAvatarContextMenu();
+
+
+        return header;
+    }
+
+    private void createAvatarContextMenu() {
         if (userInfo != null) {
             avatar.setName(userInfo.getName());
             avatar.setImage(userInfo.getImage());
         }
-
-        header.add(menuBar);
-        avatarContextMenu.addItem(new RouterLink("Profile", ProfileView.class));
-        avatarContextMenu.addItem("Settings");
-        avatarContextMenu.addItem("Help");
-        avatarContextMenu.addItem(new RouterLink("Logout", LogoutView.class));
-
-
-        return header;
+        avatarContextMenu.removeAll();
+        avatarContextMenu.addItem(new RouterLink(getTranslation(VIEWS_PERSON_INFO), ProfileView.class));
+        avatarContextMenu.addItem(getTranslation(ACTIONS_SETTINGS));
+        avatarContextMenu.addItem(getTranslation(ACTIONS_HELP));
+        avatarContextMenu.addItem(new RouterLink(getTranslation(ACTIONS_LOGOUT), LogoutView.class));
     }
 
     protected Component createDrawer(final Tabs menu) {
@@ -190,22 +193,10 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
     protected Tab createTab(RouteData entry) {
         final Tab result = new Tab();
 
-        RouterLink link = new RouterLink(entry.getTemplate(), entry.getNavigationTarget());
-
-        PageTitle pt = entry.getNavigationTarget().getAnnotation(PageTitle.class);
-        if (pt != null) link.setText(pt.value());
+        RouterLink link = new RouterLink(i18nReadPageTitle(entry.getNavigationTarget()), entry.getNavigationTarget());
 
         result.add(link);
         ComponentUtil.setData(result, Class.class, entry.getNavigationTarget());
-
-        return result;
-    }
-
-    protected Tab createTab(String text, String uri) {
-        final Tab result = new Tab();
-
-        Anchor link = new Anchor(uri, text);
-        result.add(link);
 
         return result;
     }
@@ -218,79 +209,22 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
                 System.identityHashCode(this),
                 System.identityHashCode(event.getSource()),
                 event.getNavigationTarget().getSimpleName(),
-                hasPermission(event.getNavigationTarget())
+                permissionChecker.hasPermission(event.getNavigationTarget(), userInfo)
         );
 
-        viewTitle.setText(event.getNavigationTarget().getAnnotation(PageTitle.class).value());
+        String title = i18nReadPageTitle(event.getNavigationTarget());
+
+        viewTitle.setText(title);
     }
 
-    /**
-     * Checks if the target is permitted for the current logged in user.
-     *
-     * @param target class to check for annotations.
-     * @return if the class is denied for everyone.
-     */
-    private boolean hasPermission(Class<?> target) {
-        return !isDeniedToAll(target)
-                && !needsAdditionalAuthentication(target)
-                && (isPermittedForAll(target) || userHasRole(target));
-    }
+    private String i18nReadPageTitle(final Class<?> target) {
+        String result;
 
-    /**
-     * If the target is annotated with {@link DenyAll} nobody is allowed to access the target.
-     *
-     * @param target the class to check for annotations.
-     * @return TRUE if the class is denied for everyone.
-     */
-    private boolean isDeniedToAll(Class<?> target) {
-        boolean result = target.isAnnotationPresent(DenyAll.class);
-
-        log.trace("checked for deny-all annotation. view='{}', deny-all='{}'",
-                target.getSimpleName(),
-                result
-        );
-
-        return result;
-    }
-
-
-    /**
-     * A target is permitted for all when it either has the {@link PermitAll} annotation or has no security annotation
-     * at all.
-     *
-     * @param target The class to check for the annotation.
-     * @return TRUE if there are no access restrictions at all.
-     */
-    private boolean isPermittedForAll(Class<?> target) {
-        boolean result = target.isAnnotationPresent(PermitAll.class)
-                || (!target.isAnnotationPresent(DenyAll.class) && !target.isAnnotationPresent(RolesAllowed.class));
-
-        log.trace("checked for permit-all annotation. view='{}', permit-all='{}'",
-                target.getSimpleName(),
-                result
-        );
-
-        return result;
-    }
-
-    private boolean userHasRole(Class<?> target) {
-        String[] rolesAllowed = target.getAnnotation(RolesAllowed.class) != null ?
-                target.getAnnotation(RolesAllowed.class).value()
-                : new String[0];
-
-        log.trace("checking for roles-allowed. view='{}', roles-allowed='{}'",
-                target.getSimpleName(),
-                rolesAllowed
-        );
-
-        return (userInfo != null)
-                && Arrays.stream(rolesAllowed).anyMatch(r -> userInfo.isUserInRole(r));
-    }
-
-    private boolean needsAdditionalAuthentication(Class<?> target) {
-        boolean result = (userInfo == null) && target.isAnnotationPresent(Authenticated.class);
-
-        log.trace("checking for authentication required. view='{}', authenticated='{}'", target.getSimpleName(), result);
+        if (target.isAnnotationPresent(PageTitle.class)) {
+            result = getTranslation(UI.getCurrent().getLocale(), target.getAnnotation(PageTitle.class).value());
+        } else {
+            result = target.getSimpleName().replace("View", "");
+        }
 
         return result;
     }
@@ -310,38 +244,6 @@ public abstract class AbstractBaseLayout extends AppLayout implements EventBusRe
             }
         }
 
-        denyEntryToProtectedPagesWithoutPermission(event.getNavigationTarget(), event.getUI());
-    }
-
-    private void denyEntryToProtectedPagesWithoutPermission(Class<?> target, UI ui) {
-        if (!hasPermission(target)) {
-            log.error("user has no permission to enter the page. session='{}', target='{}'",
-                    ui.getSession().getSession().getId(),
-                    target.getSimpleName()
-            );
-
-            if (userInfo != null) {
-                log.info("User has no permission for the target page. Stay on this page!");
-                Notification.show("Sorry, you don't have access to this page!");
-                ui.getPage().getHistory().go(0);
-            } else {
-                log.info("User is not logged in. Will be redirected to login page for protected page access.");
-                ui.getPage().setLocation(applicationLoginPage);
-                ui.close();
-                ui.getSession().close();
-                log.trace("Redirected ...");
-            }
-        }
-    }
-
-
-    @Subscribe
-    public void setUserInfo(final UserDetails userInfo) {
-        this.userInfo = userInfo;
-
-        if (userInfo != null) {
-            avatar.setName(userInfo.getName());
-            avatar.setImage(userInfo.getImage());
-        }
+        permissionChecker.denyEntryToProtectedPagesWithoutPermission(event.getNavigationTarget(), event.getUI(), userInfo);
     }
 }

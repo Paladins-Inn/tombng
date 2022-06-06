@@ -17,9 +17,16 @@
 
 package de.kaiserpfalzedv.commons.vaadin.security;
 
-import com.vaadin.flow.server.ServiceInitEvent;
-import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.server.*;
+import de.kaiserpfalzedv.commons.vaadin.profile.Person;
+import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityRequestHandler;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.transaction.Transactional;
+import java.security.Principal;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 /**
  * KesServiceInitListener --
@@ -28,11 +35,49 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2.0.0  2022-06-01
  */
 @Slf4j
-public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListener {
+public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListener, SessionInitListener, SessionDestroyListener {
     @Override
     public void serviceInit(ServiceInitEvent event) {
         log.debug("Service initialized");
 
+        event.getSource().addSessionInitListener(this);
+        event.getSource().addSessionDestroyListener(this);
+
         event.addRequestHandler(new QuarkusVaadinSecurityRequestHandler());
+    }
+
+
+    @Override
+    public void sessionInit(SessionInitEvent event) throws ServiceException {
+        log.debug("Session start. session='{}'", event.getSession().getSession().isNew());
+    }
+
+
+    @Override
+    @Transactional
+    public void sessionDestroy(SessionDestroyEvent event) {
+        UserDetails userDetails = (UserDetails) event.getSession().getSession().getAttribute(Principal.class.getCanonicalName());
+
+        if (userDetails != null) {
+            log.debug("Ending session for user. session='{}', user='{}'", event.getSession().getSession().getId(),
+                    userDetails.getId()
+            );
+
+            if (userDetails instanceof Person) {
+                Person person = Person.findById(userDetails.getId());
+                person.lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
+                person.persistAndFlush();
+            } else {
+                log.warn("User is not of correct type. session='{}', user='{}', type='{}'",
+                        event.getSession().getSession().getId(),
+                        userDetails.getId(),
+                        userDetails.getClass().getCanonicalName()
+                );
+            }
+        } else {
+            log.trace("No user logged in in the session to destroy.");
+        }
+
+        log.debug("Session end. session='{}'", event.getSession().getSession().isNew());
     }
 }

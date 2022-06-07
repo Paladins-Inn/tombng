@@ -20,7 +20,7 @@ package de.kaiserpfalzedv.commons.vaadin.security;
 import com.vaadin.flow.server.*;
 import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
 import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityRequestHandler;
-import de.kaiserpfalzedv.commons.vaadin.security.servlet.SecurityWebFilter;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityWebFilter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.context.Dependent;
@@ -52,7 +52,7 @@ public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListen
     public void sessionInit(SessionInitEvent event) throws ServiceException {
         log.debug("Session start. session='{}'", event.getSession().getSession().isNew());
 
-        Profile profile = (Profile) event.getSession().getSession().getAttribute(SecurityWebFilter.PRINCIPAL);
+        Profile profile = (Profile) event.getSession().getSession().getAttribute(QuarkusVaadinSecurityWebFilter.PROFILE);
 
         Optional.ofNullable(profile).ifPresent(u -> {
             event.getSession().setAttribute(Profile.class, profile);

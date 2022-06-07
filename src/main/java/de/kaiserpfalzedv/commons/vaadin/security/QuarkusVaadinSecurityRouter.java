@@ -21,6 +21,8 @@ import com.vaadin.flow.router.Router;
 import com.vaadin.flow.server.RouteRegistry;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * QuarkusSecurityRouter --
  *
@@ -36,7 +38,7 @@ public class QuarkusVaadinSecurityRouter extends Router {
      *
      * @param registry the route registry to use, not <code>null</code>
      */
-    public QuarkusVaadinSecurityRouter(RouteRegistry registry) {
+    public QuarkusVaadinSecurityRouter(@NotNull final RouteRegistry registry) {
         super(registry);
     }
 

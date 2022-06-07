@@ -27,6 +27,9 @@ import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinResponse;
 import com.vaadin.quarkus.QuarkusVaadinServlet;
 import com.vaadin.quarkus.QuarkusVaadinServletService;
+import de.kaiserpfalzedv.commons.vaadin.profile.ProfileProducer;
+import de.kaiserpfalzedv.commons.vaadin.security.PermissionChecker;
+import de.kaiserpfalzedv.commons.vaadin.security.QuarkusVaadinSecurityRouteRegistry;
 import de.kaiserpfalzedv.commons.vaadin.security.QuarkusVaadinSecurityRouter;
 import io.quarkus.security.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +52,8 @@ public class QuarkusVaadinSecurityServletService
 
     private String applicationLoginPage;
 
+    private ProfileProducer profileProducer;
+
     private QuarkusVaadinSecurityRouter router;
 
     public QuarkusVaadinSecurityServletService(
@@ -66,7 +71,9 @@ public class QuarkusVaadinSecurityServletService
 
     @Override
     public void init() throws ServiceException {
-        this.router = new QuarkusVaadinSecurityRouter(getRouteRegistry());
+        this.router = new QuarkusVaadinSecurityRouter(
+                new QuarkusVaadinSecurityRouteRegistry(getRouteRegistry(), new PermissionChecker(), profileProducer)
+        );
 
         super.init();
     }

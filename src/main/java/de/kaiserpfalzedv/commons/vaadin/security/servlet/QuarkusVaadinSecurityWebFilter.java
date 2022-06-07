@@ -35,17 +35,18 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 
 /**
- * SecurityWebFilter --
+ * QuarkusVaadinSecurityWebFilter -- Filters all UI requests for including the {@link Profile} in the
+ * {@link javax.servlet.http.HttpSession} of the request.
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-29
  */
 @ApplicationScoped
 @RequiredArgsConstructor
-@WebFilter(urlPatterns = {"/ui", "/ui/", "/ui/*"})
+@WebFilter(urlPatterns = {"/ui/*"})
 @Slf4j
-public class SecurityWebFilter implements Filter {
-    public static final String PRINCIPAL = Principal.class.getCanonicalName();
+public class QuarkusVaadinSecurityWebFilter implements Filter {
+    public static final String PROFILE = Principal.class.getCanonicalName();
 
     private final ProfileHandler profileHandler;
 
@@ -61,47 +62,65 @@ public class SecurityWebFilter implements Filter {
 
         Principal principal = request.getUserPrincipal();
         if (principal instanceof DefaultJWTCallerPrincipal) {
-            DefaultJWTCallerPrincipal jwt = (DefaultJWTCallerPrincipal) principal;
-
-            log.debug("User is logged in. session='{}', principal={}", request.getSession().getId(), jwt);
-
-            Profile profile = (Profile) request.getSession().getAttribute(PRINCIPAL);
-            if (profile != null && principal.equals(profile.getPrincipal())) {
-                log.trace("JWT principal already in session. profile='{}', session='{}', issuer='{}', subject='{}'",
-                        ((Profile) request.getSession().getAttribute(PRINCIPAL)).getId(),
-                        request.getSession().getId(),
-                        ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getIssuer(),
-                        ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getSubject()
-                );
-            } else {
-                log.trace("Changing principal in session. JWT principal changed. session='{}', issuer='{}', subject='{}'",
-                        request.getSession().getId(),
-                        ((DefaultJWTCallerPrincipal) principal).getIssuer(),
-                        ((DefaultJWTCallerPrincipal) principal).getSubject()
-                );
-                Optional<Profile> user = profileHandler.createOrLoadForLogin(jwt);
-                user.ifPresentOrElse(
-                        u -> {
-                            ((Person) u).lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
-                            addPrincipalToSession(request, u);
-                        },
-                        () -> {
-
-                        }
-                );
-            }
+            handlePrincipalFromRequest(request, principal);
         } else {
-            log.debug("User is not logged in. session='{}', principal={}, type='{}'",
-                    request.getSession().getId(), principal, principal != null ? principal.getClass().getCanonicalName() : "./.");
-
-            removePrincipalFromSession(request);
+            logUserNotLoggedIn(request, principal);
         }
 
         filterChain.doFilter(servletRequest, servletResponse);
     }
 
+
+    private void handlePrincipalFromRequest(HttpServletRequest request, Principal principal) {
+        DefaultJWTCallerPrincipal jwt = (DefaultJWTCallerPrincipal) principal;
+
+        log.debug("User is logged in. session='{}', principal={}", request.getSession().getId(), jwt);
+
+        Profile profile = (Profile) request.getSession().getAttribute(PROFILE);
+        if (profile != null && principal.equals(profile.getPrincipal())) {
+            logAlreadyProvidedProfile(request, profile);
+        } else {
+            replaceProfileInSession(request, (DefaultJWTCallerPrincipal) principal, jwt);
+        }
+    }
+
+    private void logUserNotLoggedIn(HttpServletRequest request, Principal principal) {
+        log.debug("User is not logged in. session='{}', principal={}, type='{}'",
+                request.getSession().getId(), principal, principal != null ? principal.getClass().getCanonicalName() : "./.");
+
+        removePrincipalFromSession(request);
+    }
+
+
+    private void logAlreadyProvidedProfile(HttpServletRequest request, Profile profile) {
+        log.trace("JWT principal already in session. profile='{}', session='{}', issuer='{}', subject='{}'",
+                ((Profile) request.getSession().getAttribute(PROFILE)).getId(),
+                request.getSession().getId(),
+                ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getIssuer(),
+                ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getSubject()
+        );
+    }
+
+    private void replaceProfileInSession(HttpServletRequest request, DefaultJWTCallerPrincipal principal, DefaultJWTCallerPrincipal jwt) {
+        log.trace("Changing principal in session. JWT principal changed. session='{}', issuer='{}', subject='{}'",
+                request.getSession().getId(),
+                principal.getIssuer(),
+                principal.getSubject()
+        );
+        Optional<Profile> user = profileHandler.createOrLoadForLogin(jwt);
+        user.ifPresentOrElse(
+                u -> {
+                    ((Person) u).lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
+                    addPrincipalToSession(request, u);
+                },
+                () -> {
+
+                }
+        );
+    }
+
     private void addPrincipalToSession(HttpServletRequest request, final Profile user) {
-        request.getSession().setAttribute(PRINCIPAL, user);
+        request.getSession().setAttribute(PROFILE, user);
 
         log.trace("Added user details to session. session='{}', user={}", request.getSession().getId(), user);
     }

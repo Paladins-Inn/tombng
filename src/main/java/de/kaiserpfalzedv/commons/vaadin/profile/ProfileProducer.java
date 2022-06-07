@@ -17,37 +17,29 @@
 
 package de.kaiserpfalzedv.commons.vaadin.profile;
 
-import com.vaadin.flow.component.ComponentEvent;
-import com.vaadin.flow.component.UI;
-import lombok.Getter;
-import lombok.ToString;
+import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityWebFilter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.Principal;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
 
 /**
- * UserInfoEvent -- The Vaadin Event for user changes.
+ * ProfileProducer --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-03
  */
-@ToString(callSuper = true)
+@RequestScoped
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
-public class UserDetailsEvent extends ComponentEvent<UI> {
+public class ProfileProducer {
+    private final HttpSession session;
 
-    @Getter
-    private final Principal principal;
-
-    /**
-     * Creates a new event using the given source and indicator whether the
-     * event originated from the client side or the server side.
-     *
-     * @param source    the source component
-     * @param principal the user logged in or <em>null</em> if no user is logged in.
-     */
-    public UserDetailsEvent(UI source, Principal principal) {
-        super(source, false);
-
-        this.principal = principal;
+    @Produces
+    public Profile profile() {
+        return (Profile) session.getAttribute(QuarkusVaadinSecurityWebFilter.PROFILE);
     }
 }

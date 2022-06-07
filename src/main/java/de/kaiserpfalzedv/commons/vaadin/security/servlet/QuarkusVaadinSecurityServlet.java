@@ -24,6 +24,7 @@ import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.quarkus.QuarkusVaadinServlet;
 import com.vaadin.quarkus.QuarkusVaadinServletService;
 import de.kaiserpfalzedv.commons.vaadin.SessionEventBusRegistered;
+import de.kaiserpfalzedv.commons.vaadin.security.PermissionChecker;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -65,6 +66,9 @@ public class QuarkusVaadinSecurityServlet extends QuarkusVaadinServlet implement
         SessionEventBusRegistered {
     @Inject
     BeanManager beanManager;
+
+    @Inject
+    PermissionChecker permissionChecker;
 
     @ConfigProperty(name = "quarkus.oidc.authentication.redirect-path", defaultValue = "/ui/app/")
     String applicationLoginPage;

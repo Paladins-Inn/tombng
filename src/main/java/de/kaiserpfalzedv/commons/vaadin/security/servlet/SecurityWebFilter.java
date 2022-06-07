@@ -18,8 +18,8 @@
 package de.kaiserpfalzedv.commons.vaadin.security.servlet;
 
 import de.kaiserpfalzedv.commons.vaadin.profile.Person;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetailsHandler;
+import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
+import de.kaiserpfalzedv.commons.vaadin.profile.ProfileHandler;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ import java.util.Optional;
 public class SecurityWebFilter implements Filter {
     public static final String PRINCIPAL = Principal.class.getCanonicalName();
 
-    private final UserDetailsHandler userDetailsHandler;
+    private final ProfileHandler profileHandler;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -65,13 +65,13 @@ public class SecurityWebFilter implements Filter {
 
             log.debug("User is logged in. session='{}', principal={}", request.getSession().getId(), jwt);
 
-            UserDetails userDetails = (UserDetails) request.getSession().getAttribute(PRINCIPAL);
-            if (userDetails != null && principal.equals(userDetails.getPrincipal())) {
+            Profile profile = (Profile) request.getSession().getAttribute(PRINCIPAL);
+            if (profile != null && principal.equals(profile.getPrincipal())) {
                 log.trace("JWT principal already in session. profile='{}', session='{}', issuer='{}', subject='{}'",
-                        ((UserDetails) request.getSession().getAttribute(PRINCIPAL)).getId(),
+                        ((Profile) request.getSession().getAttribute(PRINCIPAL)).getId(),
                         request.getSession().getId(),
-                        ((DefaultJWTCallerPrincipal) userDetails.getPrincipal()).getIssuer(),
-                        ((DefaultJWTCallerPrincipal) userDetails.getPrincipal()).getSubject()
+                        ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getIssuer(),
+                        ((DefaultJWTCallerPrincipal) profile.getPrincipal()).getSubject()
                 );
             } else {
                 log.trace("Changing principal in session. JWT principal changed. session='{}', issuer='{}', subject='{}'",
@@ -79,7 +79,7 @@ public class SecurityWebFilter implements Filter {
                         ((DefaultJWTCallerPrincipal) principal).getIssuer(),
                         ((DefaultJWTCallerPrincipal) principal).getSubject()
                 );
-                Optional<UserDetails> user = userDetailsHandler.createOrLoadForLogin(jwt);
+                Optional<Profile> user = profileHandler.createOrLoadForLogin(jwt);
                 user.ifPresentOrElse(
                         u -> {
                             ((Person) u).lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
@@ -100,7 +100,7 @@ public class SecurityWebFilter implements Filter {
         filterChain.doFilter(servletRequest, servletResponse);
     }
 
-    private void addPrincipalToSession(HttpServletRequest request, final UserDetails user) {
+    private void addPrincipalToSession(HttpServletRequest request, final Profile user) {
         request.getSession().setAttribute(PRINCIPAL, user);
 
         log.trace("Added user details to session. session='{}', user={}", request.getSession().getId(), user);

@@ -20,7 +20,7 @@ package de.kaiserpfalzedv.commons.vaadin.security;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
 import io.quarkus.security.Authenticated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ public class PermissionChecker {
      * @param target class to check for annotations.
      * @return if the class is denied for everyone.
      */
-    public boolean hasPermission(Class<?> target, UserDetails userInfo) {
+    public boolean hasPermission(Class<?> target, Profile userInfo) {
         return !isDeniedToAll(target)
                 && !needsAdditionalAuthentication(target, userInfo)
                 && (isPermittedForAll(target) || userHasRole(target, userInfo));
@@ -96,7 +96,7 @@ public class PermissionChecker {
         return result;
     }
 
-    private boolean userHasRole(Class<?> target, UserDetails userInfo) {
+    private boolean userHasRole(Class<?> target, Profile userInfo) {
         String[] rolesAllowed = target.getAnnotation(RolesAllowed.class) != null ?
                 target.getAnnotation(RolesAllowed.class).value()
                 : new String[0];
@@ -118,7 +118,7 @@ public class PermissionChecker {
         }
     }
 
-    private boolean needsAdditionalAuthentication(Class<?> target, UserDetails userInfo) {
+    private boolean needsAdditionalAuthentication(Class<?> target, Profile userInfo) {
         boolean result = (userInfo == null) && target.isAnnotationPresent(Authenticated.class);
 
         log.trace("checking for authentication required. view='{}', authenticated='{}'", target.getSimpleName(), result);
@@ -126,7 +126,7 @@ public class PermissionChecker {
         return result;
     }
 
-    public void denyEntryToProtectedPagesWithoutPermission(Class<?> target, UI ui, UserDetails userInfo) {
+    public void denyEntryToProtectedPagesWithoutPermission(Class<?> target, UI ui, Profile userInfo) {
         if (!hasPermission(target, userInfo)) {
             log.error("user has no permission to enter the page. session='{}', target='{}'",
                     ui.getSession().getSession().getId(),

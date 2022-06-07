@@ -32,7 +32,7 @@ import java.util.Set;
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-05-29
  */
-public interface UserDetails extends Serializable, Principal, HasName, HasId {
+public interface Profile extends Serializable, Principal, HasName, HasId {
     Principal getPrincipal();
 
     String getEmail();

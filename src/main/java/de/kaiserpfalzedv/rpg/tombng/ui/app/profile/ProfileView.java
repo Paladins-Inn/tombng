@@ -20,8 +20,7 @@ package de.kaiserpfalzedv.rpg.tombng.ui.app.profile;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys;
-import de.kaiserpfalzedv.commons.vaadin.profile.PersonInfoView;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
 import de.kaiserpfalzedv.rpg.tombng.ui.UserLayout;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +41,6 @@ import javax.inject.Inject;
 @Dependent
 @RequiredArgsConstructor(onConstructor_ = {@Inject})
 @Slf4j
-public class ProfileView extends PersonInfoView {
-    private final UserDetails data;
+public class ProfileView extends de.kaiserpfalzedv.commons.vaadin.profile.ProfileView {
+    private final Profile data;
 }

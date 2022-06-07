@@ -37,7 +37,7 @@ import java.util.UUID;
 import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
 
 /**
- * PersonInfoView --
+ * ProfileView --
  *
  * @author klenkes74 {@literal <rlichti@kaiserpfalz-edv.de>}
  * @since 2.0.0  2022-06-05
@@ -47,12 +47,12 @@ import static de.kaiserpfalzedv.commons.vaadin.i18n.DefaultComponentsI18nKeys.*;
 @Dependent
 @NoArgsConstructor
 @Slf4j
-public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID>, AfterNavigationObserver {
+public class ProfileView extends FormLayout implements HasUrlParameter<UUID>, AfterNavigationObserver {
 
     @Inject
-    UserDetails data;
+    Profile data;
 
-    private Binder<UserDetails> binder;
+    private Binder<Profile> binder;
 
     private TextField id, name, email, tenant;
 
@@ -60,21 +60,21 @@ public class PersonInfoView extends FormLayout implements HasUrlParameter<UUID>,
 
     @PostConstruct
     public void init() {
-        binder = new Binder<>(UserDetails.class);
+        binder = new Binder<>(Profile.class);
 
         id = new TextField(getTranslation(PROFILE_ID));
         binder.forField(id).bind(d -> d.getId().toString(), null);
 
         name = new TextField(getTranslation(PROFILE_NAME));
         setColspan(name, 2);
-        binder.forField(name).bind(UserDetails::getName, null);
+        binder.forField(name).bind(Profile::getName, null);
 
         email = new TextField(getTranslation(PROFILE_EMAIL));
         setColspan(email, 2);
-        binder.forField(email).bind(UserDetails::getEmail, null);
+        binder.forField(email).bind(Profile::getEmail, null);
 
         tenant = new TextField(getTranslation(PROFILE_TENANT));
-        binder.forField(tenant).bind(UserDetails::getTenant, null);
+        binder.forField(tenant).bind(Profile::getTenant, null);
 
 
         firstLogin = new DateTimePicker(getTranslation(PROFILE_LOGIN_FIRST));

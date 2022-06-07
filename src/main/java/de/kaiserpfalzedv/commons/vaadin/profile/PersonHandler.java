@@ -28,7 +28,7 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 
 /**
- * PersonHandler -- Implements the {@link UserDetailsHandler} for the concrete {@link Person} class.
+ * PersonHandler -- Implements the {@link ProfileHandler} for the concrete {@link Person} class.
  * <p>
  * Creates a new person. Needs to be another class than the loader to enable transaction handling.
  *
@@ -37,14 +37,14 @@ import java.util.Optional;
  */
 @Dependent
 @Slf4j
-public class PersonHandler implements UserDetailsHandler {
+public class PersonHandler implements ProfileHandler {
 
     @ConfigProperty(name = "quarkus.oidc.roles.role-claim-path", defaultValue = "realm/")
     String roleClaimPath;
 
     @Override
     @Transactional
-    synchronized public Optional<UserDetails> load(final DefaultJWTCallerPrincipal principal) {
+    synchronized public Optional<Profile> load(final DefaultJWTCallerPrincipal principal) {
         log.trace("trying to load profile from db. issuer='{}', subjectO'{}'",
                 principal.getIssuer(), principal.getSubject()
         );
@@ -55,9 +55,17 @@ public class PersonHandler implements UserDetailsHandler {
             result.principal = principal;
             result.roleClaim = roleClaimPath;
 
-            log.debug("profile loaded from db. profile='{}', issuer='{}', subject='{}'", result.id, result.issuer, result.subject);
+            log.debug(
+                    "profile loaded from db. profile='{}', issuer='{}', subject='{}', first-login='{}', last-login='{}'",
+                    result.id,
+                    result.issuer,
+                    result.subject,
+                    result.getCreated(),
+                    result.getLastLogin()
+            );
         } else {
-            log.info("profile not found in db. issuer='{}', subject='{}'", principal.getIssuer(), principal.getSubject());
+            log.info("profile not found in db. issuer='{}', subject='{}'",
+                    principal.getIssuer(), principal.getSubject());
         }
 
         return Optional.ofNullable(result);
@@ -86,24 +94,16 @@ public class PersonHandler implements UserDetailsHandler {
 
     @Override
     @Transactional
-    synchronized public Optional<UserDetails> createOrLoadForLogin(final DefaultJWTCallerPrincipal principal) {
+    synchronized public Optional<Profile> createOrLoadForLogin(final DefaultJWTCallerPrincipal principal) {
         log.debug("create or load profile. issuer='{}', subject='{}'",
                 principal.getIssuer(),
                 principal.getSubject()
         );
 
-        Optional<UserDetails> result = load(principal);
+        Optional<Profile> result = load(principal);
 
         if (result.isPresent()) {
             ((Person) result.get()).lastLogin = OffsetDateTime.now(ZoneOffset.UTC);
-
-            log.trace("loaded profile. profile='{}', issuer='{}', subject='{}', first-login='{}', last-login='{}'",
-                    result.get().getId(),
-                    principal.getIssuer(),
-                    principal.getSubject(),
-                    result.get().getCreated(),
-                    result.get().getLastLogin()
-            );
         } else {
             result = Optional.ofNullable(create(principal));
         }

@@ -39,7 +39,7 @@ public class UserDetailsProducer {
     private final HttpSession session;
 
     @Produces
-    public UserDetails userDetails() {
-        return (UserDetails) session.getAttribute(SecurityWebFilter.PRINCIPAL);
+    public Profile userDetails() {
+        return (Profile) session.getAttribute(SecurityWebFilter.PRINCIPAL);
     }
 }

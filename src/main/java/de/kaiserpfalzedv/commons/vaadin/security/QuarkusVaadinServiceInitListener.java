@@ -18,7 +18,7 @@
 package de.kaiserpfalzedv.commons.vaadin.security;
 
 import com.vaadin.flow.server.*;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
 import de.kaiserpfalzedv.commons.vaadin.security.servlet.QuarkusVaadinSecurityRequestHandler;
 import de.kaiserpfalzedv.commons.vaadin.security.servlet.SecurityWebFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,14 +52,14 @@ public class QuarkusVaadinServiceInitListener implements VaadinServiceInitListen
     public void sessionInit(SessionInitEvent event) throws ServiceException {
         log.debug("Session start. session='{}'", event.getSession().getSession().isNew());
 
-        UserDetails userDetails = (UserDetails) event.getSession().getSession().getAttribute(SecurityWebFilter.PRINCIPAL);
+        Profile profile = (Profile) event.getSession().getSession().getAttribute(SecurityWebFilter.PRINCIPAL);
 
-        Optional.ofNullable(userDetails).ifPresent(u -> {
-            event.getSession().setAttribute(UserDetails.class, userDetails);
+        Optional.ofNullable(profile).ifPresent(u -> {
+            event.getSession().setAttribute(Profile.class, profile);
 
             log.trace("copied user profile to vaadin session. session='{}', profile='{}'",
                     event.getSession().getSession().getId(),
-                    userDetails.getId()
+                    profile.getId()
             );
         });
     }

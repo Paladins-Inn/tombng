@@ -38,7 +38,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.*;
 import de.kaiserpfalzedv.commons.vaadin.SessionEventBusRegistered;
-import de.kaiserpfalzedv.commons.vaadin.profile.UserDetails;
+import de.kaiserpfalzedv.commons.vaadin.profile.Profile;
 import de.kaiserpfalzedv.commons.vaadin.security.LogoutView;
 import de.kaiserpfalzedv.commons.vaadin.security.PermissionChecker;
 import de.kaiserpfalzedv.commons.vaadin.security.PermissionHolding;
@@ -77,7 +77,7 @@ public abstract class AbstractBaseLayout extends AppLayout implements SessionEve
 
     @Inject
     @ToString.Include
-    protected UserDetails userInfo;
+    protected Profile userInfo;
 
     @Inject
     protected PermissionChecker permissionChecker;

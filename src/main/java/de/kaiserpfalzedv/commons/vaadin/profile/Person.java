@@ -61,7 +61,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class Person extends PanacheEntityBase implements UserDetails {
+public class Person extends PanacheEntityBase implements Profile {
     @Id
     @Column(name = "ID", length = 36, nullable = false, updatable = false, unique = true)
     @GeneratedValue(generator = "UUID")

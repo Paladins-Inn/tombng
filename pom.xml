@@ -37,7 +37,7 @@
 
         <vaadin.version>23.1.0.rc1</vaadin.version>
 
-        <quarkus.version>2.9.2.Final</quarkus.version>
+        <quarkus.version>2.10.0.Final</quarkus.version>
         <kp-commons.version>2.2.0</kp-commons.version>
         <kp-rpg.version>1.2.0</kp-rpg.version>
 

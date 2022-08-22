@@ -42,7 +42,7 @@
         <kp-rpg.version>1.2.0</kp-rpg.version>
 
         <surefire-plugin.version>3.0.0-M6</surefire-plugin.version>
-        <dependency-check-maven.version>7.1.0</dependency-check-maven.version>
+        <dependency-check-maven.version>7.1.2</dependency-check-maven.version>
     </properties>
 
     <repositories>
